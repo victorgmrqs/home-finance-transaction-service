@@ -11,5 +11,5 @@ def present_healthcheck(result: dict):
         return error_response(
             code="HEALTHCHECK_FAIL",
             message="Database connection failed",
-            status_code=500
+            data=None
         )
