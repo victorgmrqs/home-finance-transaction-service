@@ -5,8 +5,7 @@ Baseado em Pydantic Settings para validação e type hints
 
 import os
 from functools import lru_cache
-from typing import Optional
-from pydantic import BaseModel, Field, field_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
 
