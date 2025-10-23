@@ -1,0 +1,226 @@
+"""
+Transaction Repository
+Implementação do repositório de transações usando SQLAlchemy
+"""
+
+from typing import Optional, List
+from datetime import datetime, timezone, date
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func
+from src.ports.transaction_port import ITransactionRepository
+from src.domain.models.transaction import Transaction, TransactionType, Recurrence, TipoDivisao
+from src.adapters.repositories.models import TransactionModel
+from src.domain.exceptions import DatabaseException
+
+
+class TransactionRepository(ITransactionRepository):
+    """Repositório de transações usando SQLAlchemy"""
+
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    def _to_domain(self, model: TransactionModel) -> Transaction:
+        """Converte model do SQLAlchemy para entidade de domínio"""
+        return Transaction(
+            id=model.id,
+            data=model.data,
+            descricao=model.descricao,
+            valor=model.valor,
+            tipo=TransactionType(model.tipo),
+            categoria=model.categoria,
+            recorrencia=Recurrence(model.recorrencia) if model.recorrencia else None,
+            parcelas=model.parcelas,
+            tipo_divisao=TipoDivisao(model.tipo_divisao) if model.tipo_divisao else TipoDivisao.PESSOAL,
+            valor_por_pessoa=model.valor_por_pessoa,
+            porcentagem_divisao=model.porcentagem_divisao,
+            local_id=model.local_id,
+            painel_id=model.painel_id,
+            criado_em=model.criado_em,
+            atualizado_em=model.atualizado_em
+        )
+
+    def _to_model(self, transaction: Transaction) -> TransactionModel:
+        """Converte entidade de domínio para model do SQLAlchemy"""
+        return TransactionModel(
+            id=transaction.id,
+            data=transaction.data,
+            descricao=transaction.descricao,
+            valor=transaction.valor,
+            tipo=transaction.tipo.value,
+            categoria=transaction.categoria,
+            recorrencia=transaction.recorrencia.value if transaction.recorrencia else None,
+            parcelas=transaction.parcelas,
+            tipo_divisao=transaction.tipo_divisao.value if transaction.tipo_divisao else "PESSOAL",
+            valor_por_pessoa=transaction.valor_por_pessoa,
+            porcentagem_divisao=transaction.porcentagem_divisao,
+            local_id=transaction.local_id,
+            painel_id=transaction.painel_id
+        )
+
+    async def create(self, transaction: Transaction) -> Transaction:
+        """Cria uma nova transação"""
+        try:
+            model = self._to_model(transaction)
+            self.session.add(model)
+            await self.session.commit()
+            await self.session.refresh(model)
+            return self._to_domain(model)
+        except Exception as e:
+            await self.session.rollback()
+            raise DatabaseException(f"Erro ao criar transação: {str(e)}", e)
+
+    async def get_by_id(self, transaction_id: int) -> Optional[Transaction]:
+        """Busca transação por ID"""
+        try:
+            stmt = select(TransactionModel).where(TransactionModel.id == transaction_id)
+            result = await self.session.execute(stmt)
+            model = result.scalar_one_or_none()
+
+            if model is None:
+                return None
+
+            return self._to_domain(model)
+        except Exception as e:
+            raise DatabaseException(f"Erro ao buscar transação: {str(e)}", e)
+
+    def _build_filter_query(
+        self,
+        tipo: Optional[str] = None,
+        categoria: Optional[str] = None,
+        local_id: Optional[int] = None,
+        painel_id: Optional[int] = None,
+        descricao: Optional[str] = None,
+        data_inicio: Optional[date] = None,
+        data_fim: Optional[date] = None
+    ):
+        """Constrói query base com filtros (reutilizável para list e count)"""
+        conditions = []
+
+        if tipo:
+            conditions.append(TransactionModel.tipo == tipo)
+        if categoria:
+            conditions.append(TransactionModel.categoria == categoria)
+        if local_id:
+            conditions.append(TransactionModel.local_id == local_id)
+        if painel_id:
+            conditions.append(TransactionModel.painel_id == painel_id)
+        if descricao:
+            conditions.append(TransactionModel.descricao.ilike(f"%{descricao}%"))
+        if data_inicio:
+            conditions.append(TransactionModel.data >= data_inicio)
+        if data_fim:
+            conditions.append(TransactionModel.data <= data_fim)
+
+        return conditions
+
+    async def list_all(
+        self,
+        limit: int = 10,
+        offset: int = 0,
+        tipo: Optional[str] = None,
+        categoria: Optional[str] = None,
+        local_id: Optional[int] = None,
+        painel_id: Optional[int] = None,
+        descricao: Optional[str] = None,
+        data_inicio: Optional[date] = None,
+        data_fim: Optional[date] = None
+    ) -> List[Transaction]:
+        """Lista transações com filtros opcionais"""
+        try:
+            stmt = select(TransactionModel)
+
+            # Aplicar filtros usando helper
+            conditions = self._build_filter_query(
+                tipo, categoria, local_id, painel_id, descricao, data_inicio, data_fim
+            )
+            for condition in conditions:
+                stmt = stmt.where(condition)
+
+            # Ordenar por data decrescente
+            stmt = stmt.order_by(TransactionModel.data.desc())
+
+            # Paginação
+            stmt = stmt.limit(limit).offset(offset)
+
+            result = await self.session.execute(stmt)
+            models = result.scalars().all()
+
+            return [self._to_domain(model) for model in models]
+        except Exception as e:
+            raise DatabaseException(f"Erro ao listar transações: {str(e)}", e)
+
+    async def update(self, transaction_id: int, transaction: Transaction) -> Optional[Transaction]:
+        """Atualiza uma transação"""
+        try:
+            stmt = select(TransactionModel).where(TransactionModel.id == transaction_id)
+            result = await self.session.execute(stmt)
+            model = result.scalar_one_or_none()
+
+            if model is None:
+                return None
+
+            # Atualizar campos
+            model.data = transaction.data
+            model.descricao = transaction.descricao
+            model.valor = transaction.valor
+            model.tipo = transaction.tipo.value
+            model.categoria = transaction.categoria
+            model.recorrencia = transaction.recorrencia.value if transaction.recorrencia else None
+            model.parcelas = transaction.parcelas
+            model.tipo_divisao = transaction.tipo_divisao.value if transaction.tipo_divisao else "PESSOAL"
+            model.valor_por_pessoa = transaction.valor_por_pessoa
+            model.porcentagem_divisao = transaction.porcentagem_divisao
+            model.local_id = transaction.local_id
+            model.painel_id = transaction.painel_id
+            model.atualizado_em = datetime.now(timezone.utc)
+
+            await self.session.commit()
+            await self.session.refresh(model)
+
+            return self._to_domain(model)
+        except Exception as e:
+            await self.session.rollback()
+            raise DatabaseException(f"Erro ao atualizar transação: {str(e)}", e)
+
+    async def delete(self, transaction_id: int) -> bool:
+        """Remove uma transação"""
+        try:
+            stmt = select(TransactionModel).where(TransactionModel.id == transaction_id)
+            result = await self.session.execute(stmt)
+            model = result.scalar_one_or_none()
+
+            if model is None:
+                return False
+
+            await self.session.delete(model)
+            await self.session.commit()
+            return True
+        except Exception as e:
+            await self.session.rollback()
+            raise DatabaseException(f"Erro ao deletar transação: {str(e)}", e)
+
+    async def count(
+        self,
+        tipo: Optional[str] = None,
+        categoria: Optional[str] = None,
+        local_id: Optional[int] = None,
+        painel_id: Optional[int] = None,
+        descricao: Optional[str] = None,
+        data_inicio: Optional[date] = None,
+        data_fim: Optional[date] = None
+    ) -> int:
+        """Conta total de transações com filtros"""
+        try:
+            stmt = select(func.count(TransactionModel.id))
+
+            # Aplicar filtros usando helper (DRY)
+            conditions = self._build_filter_query(
+                tipo, categoria, local_id, painel_id, descricao, data_inicio, data_fim
+            )
+            for condition in conditions:
+                stmt = stmt.where(condition)
+
+            result = await self.session.execute(stmt)
+            return result.scalar_one()
+        except Exception as e:
+            raise DatabaseException(f"Erro ao contar transações: {str(e)}", e)
