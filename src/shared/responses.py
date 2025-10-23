@@ -1,38 +1,50 @@
 """
 Respostas padronizadas da aplicação
+Segue o padrão definido no contrato da API (transaction-service-contract.yaml)
 """
 
-from datetime import datetime
 from typing import Any, Optional
 
 
 def success_response(
     code: str,
     message: str,
-    data: Optional[Any] = None,
-    status_code: int = 200
+    data: Optional[Any] = None
 ) -> dict:
-    """Resposta de sucesso padronizada"""
+    """
+    Resposta de sucesso padronizada
+
+    Formato:
+    {
+        "code": "ENDPOINT_SPECIFIC_CODE",
+        "message": "Mensagem de status",
+        "data": { ... } ou null
+    }
+    """
     return {
-        "success": True,
         "code": code,
         "message": message,
-        "data": data,
-        "timestamp": datetime.utcnow().isoformat()
+        "data": data
     }
 
 
 def error_response(
     code: str,
     message: str,
-    details: Optional[list] = None,
-    status_code: int = 400
+    data: Optional[Any] = None
 ) -> dict:
-    """Resposta de erro padronizada"""
+    """
+    Resposta de erro padronizada
+
+    Formato:
+    {
+        "code": "ERROR_CODE",
+        "message": "Mensagem de erro",
+        "data": null
+    }
+    """
     return {
-        "success": False,
         "code": code,
         "message": message,
-        "details": details or [],
-        "timestamp": datetime.utcnow().isoformat()
+        "data": data
     }
