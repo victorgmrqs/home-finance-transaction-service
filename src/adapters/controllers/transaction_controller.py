@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 from datetime import date
+from calendar import monthrange
 
 from src.db.session import get_session
 from src.adapters.repositories.transaction_repository import TransactionRepository
@@ -69,7 +70,14 @@ async def create_transaction(
         valor_por_pessoa=request.valor_por_pessoa,
         porcentagem_divisao=request.porcentagem_divisao,
         local_id=request.local_id,
-        painel_id=request.painel_id
+        painel_id=request.painel_id,
+        # Campos de parcelamento e recorrência (valores padrão para nova transação)
+        parcela_numero=None,
+        transacao_mae_id=None,
+        eh_parcela=False,
+        transacao_recorrente_origem_id=None,
+        recorrencia_ativa=True,
+        proxima_geracao=None
     )
 
     # Executar caso de uso
@@ -89,6 +97,7 @@ async def list_transactions(
     tipo: Optional[str] = Query(None, pattern="^(ENTRADA|SAIDA)$", description="Filtrar por tipo"),
     categoria: Optional[str] = Query(None, description="Filtrar por categoria"),
     local_id: Optional[int] = Query(None, description="Filtrar por ID do local"),
+    mes: Optional[str] = Query(None, pattern="^\\d{4}-\\d{2}$", description="Filtrar por mês (YYYY-MM)"),
     data_inicio: Optional[date] = Query(None, description="Data inicial (YYYY-MM-DD)"),
     data_fim: Optional[date] = Query(None, description="Data final (YYYY-MM-DD)"),
     descricao: Optional[str] = Query(None, description="Buscar por descrição"),
@@ -107,12 +116,28 @@ async def list_transactions(
     - **tipo**: Filtrar por ENTRADA ou SAIDA
     - **categoria**: Filtrar por categoria
     - **local_id**: Filtrar por ID do local
+    - **mes**: Filtrar por mês (formato: YYYY-MM, ex: 2025-09)
     - **data_inicio**: Data inicial do filtro (formato: YYYY-MM-DD)
     - **data_fim**: Data final do filtro (formato: YYYY-MM-DD)
     - **descricao**: Buscar por texto na descrição
+
+    Nota: Se 'mes' for fornecido, ele sobrescreve data_inicio e data_fim
     """
     repository = TransactionRepository(session)
     service = TransactionService(repository)
+
+    # Se mes for fornecido, calcular data_inicio e data_fim automaticamente
+    if mes:
+        ano, mes_numero = mes.split('-')
+        ano_int = int(ano)
+        mes_int = int(mes_numero)
+
+        # Primeiro dia do mês
+        data_inicio = date(ano_int, mes_int, 1)
+
+        # Último dia do mês
+        ultimo_dia = monthrange(ano_int, mes_int)[1]
+        data_fim = date(ano_int, mes_int, ultimo_dia)
 
     # Calcular offset a partir da página
     offset = (page - 1) * page_size
@@ -181,12 +206,165 @@ async def update_transaction(
         valor_por_pessoa=request.valor_por_pessoa if request.valor_por_pessoa is not None else current.valor_por_pessoa,
         porcentagem_divisao=request.porcentagem_divisao if request.porcentagem_divisao is not None else current.porcentagem_divisao,
         local_id=request.local_id if request.local_id is not None else current.local_id,
-        painel_id=request.painel_id if request.painel_id is not None else current.painel_id
+        painel_id=request.painel_id if request.painel_id is not None else current.painel_id,
+        # Manter campos de parcelamento e recorrência
+        parcela_numero=current.parcela_numero,
+        transacao_mae_id=current.transacao_mae_id,
+        eh_parcela=current.eh_parcela,
+        transacao_recorrente_origem_id=current.transacao_recorrente_origem_id,
+        recorrencia_ativa=current.recorrencia_ativa,
+        proxima_geracao=current.proxima_geracao,
+        criado_em=current.criado_em,
+        atualizado_em=current.atualizado_em
     )
 
     updated = await service.update_transaction(id, updated_transaction)
 
     return present_transaction_updated(updated)
+
+
+@router.get("/transactions/{id}/parcelas")
+async def list_installments(
+    id: int,
+    session: AsyncSession = Depends(get_session),
+    usuario_id: int = Depends(get_current_user_id)
+):
+    """
+    Lista todas as parcelas de uma transação parcelada
+
+    **Requer autenticação** (header X-User-ID em dev)
+
+    Se a transação não for parcelada, retorna apenas ela mesma.
+    Se for parcelada, retorna todas as parcelas ordenadas por número.
+
+    - **id**: ID de qualquer parcela da transação
+    """
+    from src.domain.exceptions import TransactionNotFoundException
+
+    repository = TransactionRepository(session)
+    service = TransactionService(repository)
+
+    try:
+        # Listar todas as parcelas
+        parcelas = await service.list_installments(id)
+
+        # Formatar resposta
+        parcelas_data = []
+        for parcela in parcelas:
+            parcelas_data.append({
+                "id": parcela.id,
+                "data": parcela.data.isoformat(),
+                "descricao": parcela.descricao,
+                "valor": float(parcela.valor),
+                "tipo": parcela.tipo.value,
+                "categoria": parcela.categoria,
+                "painel_id": parcela.painel_id,
+                "parcelas": parcela.parcelas,
+                "parcela_numero": parcela.parcela_numero,
+                "eh_parcela": parcela.eh_parcela,
+                "transacao_mae_id": parcela.transacao_mae_id
+            })
+
+        return {
+            "code": "INSTALLMENTS_LIST_SUCCESS",
+            "message": f"Encontradas {len(parcelas)} parcela(s)",
+            "data": {
+                "total": len(parcelas),
+                "parcelas": parcelas_data
+            }
+        }
+
+    except TransactionNotFoundException:
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "code": "TRANSACTION_NOT_FOUND",
+                "message": "Transação não encontrada"
+            }
+        )
+
+
+@router.patch("/transactions/{id}/mover")
+async def move_transaction(
+    id: int,
+    painel_id: int = Query(..., description="ID do painel de destino"),
+    session: AsyncSession = Depends(get_session),
+    usuario_id: int = Depends(get_current_user_id)
+):
+    """
+    Move uma transação para outro painel/cartão
+
+    **Requer autenticação** (header X-User-ID em dev)
+
+    Este é um endpoint especializado para mover transações entre painéis.
+    É mais simples que o PUT completo pois requer apenas o painel de destino.
+
+    - **id**: ID da transação a mover
+    - **painel_id**: ID do painel/cartão de destino (query parameter)
+    """
+    from src.domain.exceptions import TransactionNotFoundException
+
+    repository = TransactionRepository(session)
+    service = TransactionService(repository)
+
+    try:
+        # Buscar transação atual
+        current = await service.get_transaction(id)
+
+        # Criar transação atualizada com novo painel
+        updated_transaction = Transaction(
+            id=current.id,
+            data=current.data,
+            descricao=current.descricao,
+            valor=current.valor,
+            tipo=current.tipo,
+            categoria=current.categoria,
+            recorrencia=current.recorrencia,
+            parcelas=current.parcelas,
+            tipo_divisao=current.tipo_divisao,
+            valor_por_pessoa=current.valor_por_pessoa,
+            porcentagem_divisao=current.porcentagem_divisao,
+            local_id=current.local_id,
+            painel_id=painel_id,  # Novo painel
+            # Manter campos de parcelamento e recorrência
+            parcela_numero=current.parcela_numero,
+            transacao_mae_id=current.transacao_mae_id,
+            eh_parcela=current.eh_parcela,
+            transacao_recorrente_origem_id=current.transacao_recorrente_origem_id,
+            recorrencia_ativa=current.recorrencia_ativa,
+            proxima_geracao=current.proxima_geracao,
+            criado_em=current.criado_em,
+            atualizado_em=current.atualizado_em
+        )
+
+        # Atualizar transação
+        updated = await service.update_transaction(id, updated_transaction)
+
+        return {
+            "code": "TRANSACTION_MOVED",
+            "message": f"Transação movida para o painel {painel_id} com sucesso",
+            "data": {
+                "id": updated.id,
+                "data": updated.data.isoformat(),
+                "descricao": updated.descricao,
+                "valor": float(updated.valor),
+                "tipo": updated.tipo.value,
+                "categoria": updated.categoria,
+                "painel_id": updated.painel_id,
+                "painel_anterior": current.painel_id
+            }
+        }
+
+    except TransactionNotFoundException:
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "code": "TRANSACTION_NOT_FOUND",
+                "message": "Transação não encontrada"
+            }
+        )
 
 
 @router.delete("/transactions/{id}", status_code=status.HTTP_200_OK, response_model=TransactionDeleteResponse)

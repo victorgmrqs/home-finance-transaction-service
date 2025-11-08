@@ -55,8 +55,14 @@ class ITransactionRepository(ABC):
         categoria: Optional[str] = None,
         local_id: Optional[int] = None,
         painel_id: Optional[int] = None,
+        descricao: Optional[str] = None,
         data_inicio: Optional[date] = None,
         data_fim: Optional[date] = None
     ) -> int:
         """Conta total de transações com filtros"""
+        pass
+
+    @abstractmethod
+    async def get_installments(self, transaction_mae_id: int) -> List[Transaction]:
+        """Busca todas as parcelas de uma transação parcelada"""
         pass

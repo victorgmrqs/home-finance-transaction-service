@@ -35,6 +35,14 @@ class TransactionRepository(ITransactionRepository):
             porcentagem_divisao=model.porcentagem_divisao,
             local_id=model.local_id,
             painel_id=model.painel_id,
+            # Campos de parcelamento
+            parcela_numero=model.parcela_numero,
+            transacao_mae_id=model.transacao_mae_id,
+            eh_parcela=model.eh_parcela,
+            # Campos de recorrência
+            transacao_recorrente_origem_id=model.transacao_recorrente_origem_id,
+            recorrencia_ativa=model.recorrencia_ativa,
+            proxima_geracao=model.proxima_geracao,
             criado_em=model.criado_em,
             atualizado_em=model.atualizado_em
         )
@@ -54,7 +62,15 @@ class TransactionRepository(ITransactionRepository):
             valor_por_pessoa=transaction.valor_por_pessoa,
             porcentagem_divisao=transaction.porcentagem_divisao,
             local_id=transaction.local_id,
-            painel_id=transaction.painel_id
+            painel_id=transaction.painel_id,
+            # Campos de parcelamento
+            parcela_numero=transaction.parcela_numero,
+            transacao_mae_id=transaction.transacao_mae_id,
+            eh_parcela=transaction.eh_parcela,
+            # Campos de recorrência
+            transacao_recorrente_origem_id=transaction.transacao_recorrente_origem_id,
+            recorrencia_ativa=transaction.recorrencia_ativa,
+            proxima_geracao=transaction.proxima_geracao
         )
 
     async def create(self, transaction: Transaction) -> Transaction:
@@ -172,7 +188,15 @@ class TransactionRepository(ITransactionRepository):
             model.porcentagem_divisao = transaction.porcentagem_divisao
             model.local_id = transaction.local_id
             model.painel_id = transaction.painel_id
-            model.atualizado_em = datetime.now(timezone.utc)
+            # Campos de parcelamento
+            model.parcela_numero = transaction.parcela_numero
+            model.transacao_mae_id = transaction.transacao_mae_id
+            model.eh_parcela = transaction.eh_parcela
+            # Campos de recorrência
+            model.transacao_recorrente_origem_id = transaction.transacao_recorrente_origem_id
+            model.recorrencia_ativa = transaction.recorrencia_ativa
+            model.proxima_geracao = transaction.proxima_geracao
+            model.atualizado_em = datetime.now()  # Sem timezone para compatibilidade com TIMESTAMP WITHOUT TIME ZONE
 
             await self.session.commit()
             await self.session.refresh(model)
@@ -224,3 +248,19 @@ class TransactionRepository(ITransactionRepository):
             return result.scalar_one()
         except Exception as e:
             raise DatabaseException(f"Erro ao contar transações: {str(e)}", e)
+
+    async def get_installments(self, transaction_mae_id: int) -> List[Transaction]:
+        """Busca todas as parcelas de uma transação parcelada"""
+        try:
+            # Buscar a transação mãe e todas as suas filhas
+            stmt = select(TransactionModel).where(
+                (TransactionModel.id == transaction_mae_id) |
+                (TransactionModel.transacao_mae_id == transaction_mae_id)
+            ).order_by(TransactionModel.parcela_numero)
+
+            result = await self.session.execute(stmt)
+            models = result.scalars().all()
+
+            return [self._to_domain(model) for model in models]
+        except Exception as e:
+            raise DatabaseException(f"Erro ao buscar parcelas: {str(e)}", e)

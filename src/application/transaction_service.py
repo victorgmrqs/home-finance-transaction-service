@@ -6,6 +6,8 @@ Orquestra a lógica de negócio relacionada a transações
 
 from typing import Optional, List
 from datetime import date
+from dateutil.relativedelta import relativedelta
+from decimal import Decimal
 from src.ports.transaction_port import ITransactionRepository
 from src.domain.models.transaction import Transaction
 from src.domain.exceptions import TransactionNotFoundException
@@ -25,18 +27,26 @@ class TransactionService:
         """
         Cria uma nova transação
 
+        Se a transação tiver parcelas > 1, cria automaticamente todas as parcelas.
+
         Args:
             transaction: Entidade de transação a ser criada
 
         Returns:
-            Transaction: Transação criada com ID
+            Transaction: Transação criada com ID (primeira parcela se parcelado)
 
         Raises:
             InvalidTransactionException: Se dados inválidos
             DatabaseException: Se erro ao salvar
         """
         # A validação já ocorre no __post_init__ da entidade
-        return await self.repository.create(transaction)
+
+        # Se não for parcelada, criar transação simples
+        if not transaction.parcelas or transaction.parcelas <= 1:
+            return await self.repository.create(transaction)
+
+        # Criar transação parcelada
+        return await self._create_installment_transactions(transaction)
 
     async def get_transaction(self, transaction_id: int) -> Transaction:
         """
@@ -162,3 +172,99 @@ class TransactionService:
             raise TransactionNotFoundException(transaction_id)
 
         return True
+
+    async def _create_installment_transactions(self, transaction: Transaction) -> Transaction:
+        """
+        Cria múltiplas transações para parcelamento
+
+        Args:
+            transaction: Transação base com informações de parcelamento
+
+        Returns:
+            Transaction: Primeira parcela criada (transação "mãe")
+        """
+        parcelas = transaction.parcelas
+        valor_total = transaction.valor
+        data_base = transaction.data
+
+        # Calcular valor de cada parcela
+        valor_parcela = Decimal(str(valor_total / parcelas)).quantize(Decimal('0.01'))
+
+        # Ajustar primeira parcela para compensar arredondamento
+        valor_primeira_parcela = valor_total - (valor_parcela * (parcelas - 1))
+
+        transacoes_criadas = []
+
+        # Criar todas as parcelas
+        for i in range(1, parcelas + 1):
+            # Calcular data da parcela (adicionar meses)
+            data_parcela = data_base + relativedelta(months=i-1)
+
+            # Valor da parcela (primeira parcela pode ser diferente devido ao arredondamento)
+            valor = valor_primeira_parcela if i == 1 else valor_parcela
+
+            # Descrição com número da parcela
+            descricao_parcela = f"{transaction.descricao} - Parcela {i}/{parcelas}"
+
+            # Criar transação parcela
+            parcela = Transaction(
+                id=None,
+                data=data_parcela,
+                descricao=descricao_parcela,
+                valor=valor,
+                tipo=transaction.tipo,
+                categoria=transaction.categoria,
+                painel_id=transaction.painel_id,
+                recorrencia=transaction.recorrencia,
+                parcelas=parcelas,
+                tipo_divisao=transaction.tipo_divisao,
+                valor_por_pessoa=transaction.valor_por_pessoa,
+                porcentagem_divisao=transaction.porcentagem_divisao,
+                local_id=transaction.local_id,
+                # Campos de parcelamento
+                parcela_numero=i,
+                transacao_mae_id=transacoes_criadas[0].id if i > 1 else None,
+                eh_parcela=True,
+                # Campos de recorrência (transações parceladas não são recorrentes automaticamente)
+                transacao_recorrente_origem_id=None,
+                recorrencia_ativa=False,
+                proxima_geracao=None
+            )
+
+            # Salvar parcela no banco
+            parcela_criada = await self.repository.create(parcela)
+            transacoes_criadas.append(parcela_criada)
+
+            # Atualizar transacao_mae_id das parcelas subsequentes
+            if i == 1:
+                # Primeira parcela criada, atualizar as próximas para referenciá-la
+                pass  # As próximas já terão o ID correto no loop
+
+        # Retornar primeira parcela (transação "mãe")
+        return transacoes_criadas[0]
+
+    async def list_installments(self, transaction_id: int) -> List[Transaction]:
+        """
+        Lista todas as parcelas de uma transação parcelada
+
+        Args:
+            transaction_id: ID de qualquer parcela da transação parcelada
+
+        Returns:
+            List[Transaction]: Lista de todas as parcelas ordenadas por número
+
+        Raises:
+            TransactionNotFoundException: Se transação não existe
+        """
+        # Buscar a transação
+        transaction = await self.get_transaction(transaction_id)
+
+        # Se não for uma parcela, retornar apenas ela mesma
+        if not transaction.eh_parcela:
+            return [transaction]
+
+        # Encontrar a transação mãe
+        mae_id = transaction.transacao_mae_id if transaction.transacao_mae_id else transaction.id
+
+        # Buscar todas as parcelas (incluindo a mãe)
+        return await self.repository.get_installments(mae_id)

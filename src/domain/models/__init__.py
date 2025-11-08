@@ -7,6 +7,7 @@ from src.domain.models.transaction import Transaction, TransactionType, Recurren
 from src.domain.models.local import Local
 from src.domain.models.usuario import Usuario
 from src.domain.models.painel import Painel
+from src.domain.models.categoria import Categoria
 
 __all__ = [
     "Transaction",
@@ -15,4 +16,5 @@ __all__ = [
     "Local",
     "Usuario",
     "Painel",
+    "Categoria",
 ]

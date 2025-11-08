@@ -79,6 +79,7 @@ from src.adapters.controllers.usuario_controller import router as usuario_router
 from src.adapters.controllers.painel_controller import router as painel_router
 from src.adapters.controllers.painel_sharing_controller import router as painel_sharing_router
 from src.adapters.controllers.painel_analytics_controller import router as painel_analytics_router
+from src.adapters.controllers.categoria_controller import router as categoria_router
 
 # Business routers (versionamento /api/v1)
 app.include_router(transaction_router, prefix="/api/v1", tags=["Transactions"])
@@ -87,6 +88,7 @@ app.include_router(usuario_router, prefix="/api/v1", tags=["Usuários"])
 app.include_router(painel_router, prefix="/api/v1", tags=["Painéis"])
 app.include_router(painel_sharing_router, prefix="/api/v1", tags=["Painéis - Compartilhamento"])
 app.include_router(painel_analytics_router, prefix="/api/v1", tags=["Painéis - Analytics"])
+app.include_router(categoria_router, prefix="/api/v1", tags=["Categorias"])
 
 
 

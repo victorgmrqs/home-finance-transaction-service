@@ -43,6 +43,18 @@ class Transaction:
     - PESSOAL: Gasto individual (padrão)
     - COMPARTILHADO_50_50: Dividido 50/50 entre duas pessoas
     - COMPARTILHADO_CUSTOM: Divisão personalizada com porcentagem
+
+    Parcelamento:
+    - parcelas: Número total de parcelas
+    - parcela_numero: Número desta parcela (1, 2, 3...)
+    - transacao_mae_id: ID da primeira parcela (null se for a parcela 1)
+    - eh_parcela: True se faz parte de um parcelamento
+
+    Recorrência:
+    - recorrencia: Tipo de recorrência (DIARIO, SEMANAL, MENSAL, OCASIONAL)
+    - transacao_recorrente_origem_id: ID da transação que gerou esta (se recorrente)
+    - recorrencia_ativa: Se False, para de gerar novas recorrências
+    - proxima_geracao: Próxima data em que deve gerar recorrência
     """
     id: Optional[int]
     data: date
@@ -57,6 +69,17 @@ class Transaction:
     valor_por_pessoa: Optional[Decimal] = None
     porcentagem_divisao: Optional[int] = None
     local_id: Optional[int] = None
+
+    # Campos de parcelamento
+    parcela_numero: Optional[int] = None
+    transacao_mae_id: Optional[int] = None
+    eh_parcela: bool = False
+
+    # Campos de recorrência
+    transacao_recorrente_origem_id: Optional[int] = None
+    recorrencia_ativa: bool = True
+    proxima_geracao: Optional[date] = None
+
     criado_em: Optional[datetime] = None
     atualizado_em: Optional[datetime] = None
 

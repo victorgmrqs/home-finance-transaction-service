@@ -1,0 +1,1201 @@
+openapi: 3.0.3
+info:
+  title: Home Finance Transaction Service API
+  version: 1.0.0
+  description: >
+    Serviço completo para gerenciamento de finanças pessoais, incluindo usuários, painéis, transações e locais.
+    Todas as respostas seguem o padrão:
+    {
+      "code": "ENDPOINT_SPECIFIC_CODE",
+      "message": "Mensagem de status",
+      "data": { ... } ou null
+    }
+
+servers:
+  - url: http://localhost:8000/api/v1
+
+paths:
+  # ===== USUÁRIOS =====
+  /usuarios:
+    get:
+      summary: Lista usuários
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - in: query
+          name: nome
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lista de usuários obtida com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseListUsuario"
+    post:
+      summary: Cria um novo usuário
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UsuarioCreate"
+      responses:
+        "201":
+          description: Usuário criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseUsuario"
+
+  /usuarios/{id}:
+    get:
+      summary: Detalha um usuário
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Usuário encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseUsuario"
+        "404":
+          description: Usuário não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseError"
+    put:
+      summary: Atualiza um usuário
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UsuarioUpdate"
+      responses:
+        "200":
+          description: Usuário atualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseUsuario"
+        "404":
+          description: Usuário não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseError"
+    delete:
+      summary: Remove um usuário
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Usuário removido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseSuccess"
+        "404":
+          description: Usuário não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseError"
+
+  /usuarios/email/{email}:
+    get:
+      summary: Busca usuário por email
+      parameters:
+        - in: path
+          name: email
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Usuário encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseUsuario"
+        "404":
+          description: Usuário não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseError"
+
+  # ===== PAINÉIS =====
+  /paineis:
+    get:
+      summary: Lista painéis
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - in: query
+          name: usuario_id
+          schema:
+            type: integer
+        - in: query
+          name: nome
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lista de painéis obtida com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseListPainel"
+    post:
+      summary: Cria um novo painel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PainelCreate"
+      responses:
+        "201":
+          description: Painel criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePainel"
+        "400":
+          description: Erro de validação ou nome duplicado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseError"
+
+  /paineis/{id}:
+    get:
+      summary: Detalha um painel
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Painel encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePainel"
+        "404":
+          description: Painel não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseError"
+    put:
+      summary: Atualiza um painel
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PainelUpdate"
+      responses:
+        "200":
+          description: Painel atualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponsePainel"
+        "404":
+          description: Painel não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseError"
+    delete:
+      summary: Remove um painel
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Painel removido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseSuccess"
+        "404":
+          description: Painel não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseError"
+
+  /usuarios/{usuario_id}/paineis:
+    get:
+      summary: Lista painéis de um usuário
+      parameters:
+        - in: path
+          name: usuario_id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - in: query
+          name: nome
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lista de painéis do usuário obtida com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseListPainel"
+
+  /paineis/by-usuario/{usuario_id}:
+    get:
+      summary: Lista painéis de um usuário (endpoint alternativo)
+      parameters:
+        - in: path
+          name: usuario_id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - in: query
+          name: nome
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lista de painéis do usuário obtida com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseListPainel"
+
+  # ===== TRANSAÇÕES =====
+  /transactions:
+    get:
+      summary: Lista transações
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - in: query
+          name: tipo
+          schema:
+            type: string
+            enum: [ENTRADA, SAIDA]
+        - in: query
+          name: categoria
+          schema:
+            type: string
+        - in: query
+          name: local
+          schema:
+            type: integer
+        - in: query
+          name: painel
+          schema:
+            type: integer
+        - in: query
+          name: descricao
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lista de transações obtida com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseListTransaction"
+    post:
+      summary: Cria uma nova transação
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransactionCreate"
+      responses:
+        "201":
+          description: Transação criada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseTransaction"
+
+  /transactions/{id}:
+    get:
+      summary: Detalha uma transação
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Transação encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseTransaction"
+        "404":
+          description: Transação não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseError"
+    put:
+      summary: Atualiza uma transação
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransactionUpdate"
+      responses:
+        "200":
+          description: Transação atualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseTransaction"
+        "404":
+          description: Transação não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseError"
+    delete:
+      summary: Remove uma transação
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Transação removida
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseSuccess"
+        "404":
+          description: Transação não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseError"
+
+  /locais:
+    get:
+      summary: Lista locais
+      responses:
+        "200":
+          description: Lista de locais obtida com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseListLocal"
+    post:
+      summary: Cria um novo local
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocalCreate"
+      responses:
+        "201":
+          description: Local criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseLocal"
+
+  /locais/{id}:
+    put:
+      summary: Atualiza um local
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocalUpdate"
+      responses:
+        "200":
+          description: Local atualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseLocal"
+        "404":
+          description: Local não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseError"
+
+  # ===== CATEGORIAS =====
+  /categorias:
+    get:
+      summary: Listar Categorias
+      description: |
+        Lista todas as categorias disponíveis para o usuário autenticado.
+        Retorna:
+        - Categorias padrão do sistema (is_default=true, usuario_id=null)
+        - Categorias customizadas do usuário (is_default=false, usuario_id=X)
+      operationId: listarCategorias
+      tags:
+        - Categorias
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Lista de categorias retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "SUCCESS"
+                  message:
+                    type: string
+                    example: "Categorias listadas com sucesso"
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CategoriaResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      summary: Criar Categoria Customizada
+      description: |
+        Cria uma nova categoria customizada para o usuário autenticado.
+        Validações:
+        - Nome único por usuário
+        - Nome obrigatório (max 100 caracteres)
+      operationId: criarCategoria
+      tags:
+        - Categorias
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoriaCreateRequest'
+      responses:
+        '201':
+          description: Categoria criada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "CREATED"
+                  message:
+                    type: string
+                    example: "Categoria criada com sucesso"
+                  data:
+                    $ref: '#/components/schemas/CategoriaResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          description: Categoria já existe para este usuário
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "CATEGORIA_JA_EXISTE"
+                message: "Já existe uma categoria com este nome"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /categorias/{id}:
+    put:
+      summary: Atualizar Categoria
+      description: |
+        Atualiza uma categoria customizada do usuário.
+        Restrições:
+        - Apenas categorias customizadas (is_default=false)
+        - Apenas categorias do próprio usuário
+      operationId: atualizarCategoria
+      tags:
+        - Categorias
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID da categoria
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoriaUpdateRequest'
+      responses:
+        '200':
+          description: Categoria atualizada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "SUCCESS"
+                  message:
+                    type: string
+                    example: "Categoria atualizada com sucesso"
+                  data:
+                    $ref: '#/components/schemas/CategoriaResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Operação não permitida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "OPERACAO_NAO_PERMITIDA"
+                message: "Não é possível editar categorias padrão do sistema"
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      summary: Deletar Categoria
+      description: |
+        Deleta uma categoria customizada do usuário.
+        Restrições:
+        - Apenas categorias customizadas (is_default=false)
+        - Apenas categorias do próprio usuário
+        - Não deleta se existirem transações associadas
+      operationId: deletarCategoria
+      tags:
+        - Categorias
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID da categoria
+      responses:
+        '200':
+          description: Categoria deletada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "SUCCESS"
+                  message:
+                    type: string
+                    example: "Categoria deletada com sucesso"
+                  data:
+                    type: object
+                    nullable: true
+        '400':
+          description: Categoria possui transações associadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "CATEGORIA_EM_USO"
+                message: "Não é possível deletar categoria com transações associadas"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Operação não permitida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "OPERACAO_NAO_PERMITIDA"
+                message: "Não é possível deletar categorias padrão do sistema"
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  schemas:
+    # ===== USUÁRIOS =====
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+        email:
+          type: string
+          nullable: true
+        criado_em:
+          type: string
+          format: date-time
+        atualizado_em:
+          type: string
+          format: date-time
+
+    UsuarioCreate:
+      type: object
+      required: [nome]
+      properties:
+        nome:
+          type: string
+          minLength: 1
+          maxLength: 255
+        email:
+          type: string
+          maxLength: 255
+          nullable: true
+
+    UsuarioUpdate:
+      type: object
+      properties:
+        nome:
+          type: string
+          minLength: 1
+          maxLength: 255
+          nullable: true
+        email:
+          type: string
+          maxLength: 255
+          nullable: true
+
+    ApiResponseUsuario:
+      type: object
+      properties:
+        code:
+          type: string
+          example: USUARIO_CREATED
+        message:
+          type: string
+          example: Usuário criado com sucesso
+        data:
+          $ref: "#/components/schemas/Usuario"
+
+    ApiResponseListUsuario:
+      type: object
+      properties:
+        code:
+          type: string
+          example: USUARIO_LIST_SUCCESS
+        message:
+          type: string
+          example: Lista de usuários obtida com sucesso
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Usuario"
+        total:
+          type: integer
+
+    # ===== PAINÉIS =====
+    Painel:
+      type: object
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+        descricao:
+          type: string
+          nullable: true
+        usuario_id:
+          type: integer
+        criado_em:
+          type: string
+          format: date-time
+        atualizado_em:
+          type: string
+          format: date-time
+
+    PainelCreate:
+      type: object
+      required: [nome, usuario_id]
+      properties:
+        nome:
+          type: string
+          minLength: 1
+          maxLength: 255
+        descricao:
+          type: string
+          maxLength: 1000
+          nullable: true
+        usuario_id:
+          type: integer
+          minimum: 1
+
+    PainelUpdate:
+      type: object
+      properties:
+        nome:
+          type: string
+          minLength: 1
+          maxLength: 255
+          nullable: true
+        descricao:
+          type: string
+          maxLength: 1000
+          nullable: true
+
+    ApiResponsePainel:
+      type: object
+      properties:
+        code:
+          type: string
+          example: PAINEL_CREATED
+        message:
+          type: string
+          example: Painel criado com sucesso
+        data:
+          $ref: "#/components/schemas/Painel"
+
+    ApiResponseListPainel:
+      type: object
+      properties:
+        code:
+          type: string
+          example: PAINEL_LIST_SUCCESS
+        message:
+          type: string
+          example: Lista de painéis obtida com sucesso
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Painel"
+        total:
+          type: integer
+
+    # ===== TRANSAÇÕES =====
+    ApiResponseTransaction:
+      type: object
+      properties:
+        code:
+          type: string
+          example: TRANSACTION_CREATED
+        message:
+          type: string
+          example: Transação criada com sucesso
+        data:
+          $ref: "#/components/schemas/Transaction"
+
+    ApiResponseListTransaction:
+      type: object
+      properties:
+        code:
+          type: string
+          example: TRANSACTION_LIST_SUCCESS
+        message:
+          type: string
+          example: Lista de transações obtida com sucesso
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Transaction"
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+
+    ApiResponseLocal:
+      type: object
+      properties:
+        code:
+          type: string
+          example: LOCAL_CREATED
+        message:
+          type: string
+          example: Local criado com sucesso
+        data:
+          $ref: "#/components/schemas/Local"
+
+    ApiResponseListLocal:
+      type: object
+      properties:
+        code:
+          type: string
+          example: LOCAL_LIST_SUCCESS
+        message:
+          type: string
+          example: Lista de locais obtida com sucesso
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Local"
+        total:
+          type: integer
+
+    ApiResponseSuccess:
+      type: object
+      properties:
+        code:
+          type: string
+          example: TRANSACTION_DELETED
+        message:
+          type: string
+          example: Transação removida com sucesso
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+          nullable: true
+
+    ApiResponseError:
+      type: object
+      properties:
+        code:
+          type: string
+          example: TRANSACTION_NOT_FOUND
+        message:
+          type: string
+          example: Transação não encontrada
+        data:
+          type: object
+          nullable: true
+          example: null
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: integer
+        data:
+          type: string
+          format: date
+        descricao:
+          type: string
+        valor:
+          type: number
+          format: float
+        tipo:
+          type: string
+          enum: [ENTRADA, SAIDA]
+        categoria:
+          type: string
+        recorrencia:
+          type: string
+          enum: [DIARIO, SEMANAL, MENSAL, OCASIONAL]
+        parcelas:
+          type: integer
+          nullable: true
+        local_id:
+          type: integer
+          nullable: true
+        painel_id:
+          type: integer
+        criado_em:
+          type: string
+          format: date-time
+        atualizado_em:
+          type: string
+          format: date-time
+
+    TransactionCreate:
+      type: object
+      required: [data, descricao, valor, tipo, categoria, painel_id]
+      properties:
+        data:
+          type: string
+          format: date
+        descricao:
+          type: string
+          minLength: 1
+          maxLength: 255
+        valor:
+          type: number
+          format: float
+          minimum: 0.01
+        tipo:
+          type: string
+          enum: [ENTRADA, SAIDA]
+        categoria:
+          type: string
+          minLength: 1
+          maxLength: 100
+        recorrencia:
+          type: string
+          enum: [DIARIO, SEMANAL, MENSAL, OCASIONAL]
+        parcelas:
+          type: integer
+          minimum: 1
+          nullable: true
+        local_id:
+          type: integer
+          nullable: true
+        painel_id:
+          type: integer
+          minimum: 1
+
+    TransactionUpdate:
+      allOf:
+        - $ref: "#/components/schemas/TransactionCreate"
+
+    Local:
+      type: object
+      properties:
+        id:
+          type: integer
+        nome_fantasia:
+          type: string
+          nullable: true
+        cnpj:
+          type: string
+          nullable: true
+        razao_social:
+          type: string
+          nullable: true
+        categoria:
+          type: string
+          nullable: true
+        endereco:
+          type: string
+          nullable: true
+        criado_em:
+          type: string
+          format: date-time
+        atualizado_em:
+          type: string
+          format: date-time
+
+    LocalCreate:
+      type: object
+      properties:
+        nome_fantasia:
+          type: string
+          maxLength: 255
+          nullable: true
+        cnpj:
+          type: string
+          maxLength: 18
+          nullable: true
+        razao_social:
+          type: string
+          maxLength: 255
+          nullable: true
+        categoria:
+          type: string
+          maxLength: 100
+          nullable: true
+        endereco:
+          type: string
+          nullable: true
+
+    LocalUpdate:
+      allOf:
+        - $ref: "#/components/schemas/LocalCreate"
+
+    # ===== CATEGORIAS =====
+    CategoriaResponse:
+      type: object
+      required:
+        - id
+        - nome
+        - is_default
+        - criado_em
+        - atualizado_em
+      properties:
+        id:
+          type: integer
+          example: 1
+          description: ID único da categoria
+        nome:
+          type: string
+          maxLength: 100
+          example: "Alimentação"
+          description: Nome da categoria
+        descricao:
+          type: string
+          nullable: true
+          example: "Gastos com alimentação e supermercado"
+          description: Descrição opcional da categoria
+        usuario_id:
+          type: integer
+          nullable: true
+          example: null
+          description: |
+            ID do usuário dono da categoria.
+            null = categoria padrão do sistema
+        is_default:
+          type: boolean
+          example: true
+          description: |
+            Indica se é categoria padrão do sistema.
+            true = categoria padrão (não editável/deletável)
+            false = categoria customizada do usuário
+        criado_em:
+          type: string
+          format: date-time
+          example: "2025-01-15T10:30:00Z"
+          description: Data de criação
+        atualizado_em:
+          type: string
+          format: date-time
+          example: "2025-01-15T10:30:00Z"
+          description: Data da última atualização
+
+    CategoriaCreateRequest:
+      type: object
+      required:
+        - nome
+      properties:
+        nome:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Academia"
+          description: Nome da categoria
+        descricao:
+          type: string
+          maxLength: 500
+          nullable: true
+          example: "Gastos com academia e atividades físicas"
+          description: Descrição opcional da categoria
+
+    CategoriaUpdateRequest:
+      type: object
+      properties:
+        nome:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Fitness"
+          description: Novo nome da categoria
+        descricao:
+          type: string
+          maxLength: 500
+          nullable: true
+          example: "Academia, personal trainer e suplementos"
+          description: Nova descrição da categoria

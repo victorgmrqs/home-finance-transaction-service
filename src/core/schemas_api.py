@@ -170,6 +170,44 @@ class PainelDeleteResponse(BaseResponse):
     data: Optional[None] = Field(None, description="Dados da resposta (null para exclusão)")
 
 
+# ===== SCHEMAS DE CATEGORIA =====
+
+class CategoriaResponse(BaseModel):
+    """Schema de resposta para uma categoria"""
+    id: int = Field(..., description="ID da categoria")
+    nome: str = Field(..., description="Nome da categoria")
+    descricao: Optional[str] = Field(None, description="Descrição da categoria")
+    usuario_id: Optional[int] = Field(None, description="ID do usuário proprietário (null para categorias padrão)")
+    is_default: bool = Field(..., description="Indica se é categoria padrão do sistema")
+    criado_em: str = Field(..., description="Data de criação (ISO format)")
+    atualizado_em: str = Field(..., description="Data de atualização (ISO format)")
+
+
+class CategoriaCreateResponse(BaseResponse):
+    """Schema de resposta para criação de categoria"""
+    data: CategoriaResponse = Field(..., description="Dados da categoria criada")
+
+
+class CategoriaDetailResponse(BaseResponse):
+    """Schema de resposta para detalhe de categoria"""
+    data: CategoriaResponse = Field(..., description="Dados da categoria")
+
+
+class CategoriaListResponse(BaseResponse):
+    """Schema de resposta para lista de categorias"""
+    data: List[CategoriaResponse] = Field(..., description="Lista de categorias")
+
+
+class CategoriaUpdateResponse(BaseResponse):
+    """Schema de resposta para atualização de categoria"""
+    data: CategoriaResponse = Field(..., description="Dados da categoria atualizada")
+
+
+class CategoriaDeleteResponse(BaseResponse):
+    """Schema de resposta para exclusão de categoria"""
+    data: Optional[None] = Field(None, description="Dados da resposta (null para exclusão)")
+
+
 # ===== SCHEMAS DE REQUEST =====
 
 
@@ -307,6 +345,18 @@ class PainelUpdateRequest(BaseModel):
         pattern="^(CARTAO_CREDITO|CONTA_BANCARIA|DINHEIRO)$",
         description="Tipo de conta"
     )
+
+
+class CategoriaCreateRequest(BaseModel):
+    """Schema para criar categoria via API"""
+    nome: str = Field(..., min_length=1, max_length=100, description="Nome da categoria")
+    descricao: Optional[str] = Field(None, max_length=500, description="Descrição da categoria")
+
+
+class CategoriaUpdateRequest(BaseModel):
+    """Schema para atualizar categoria via API"""
+    nome: Optional[str] = Field(None, min_length=1, max_length=100, description="Nome da categoria")
+    descricao: Optional[str] = Field(None, max_length=500, description="Descrição da categoria")
 
 
 class CompartilhamentoPainelRequest(BaseModel):
