@@ -24,7 +24,7 @@ class PasswordHasher:
             Hash da senha em formato string
         """
         # Gera salt e hash
-        salt = bcrypt.gensalt(rounds=12)
+        salt = bcrypt.gensalt(rounds=settings.bcrypt_rounds)
         password_bytes = password.encode('utf-8')
         hashed = bcrypt.hashpw(password_bytes, salt)
         return hashed.decode('utf-8')
@@ -45,7 +45,7 @@ class PasswordHasher:
             password_bytes = password.encode('utf-8')
             hash_bytes = password_hash.encode('utf-8')
             return bcrypt.checkpw(password_bytes, hash_bytes)
-        except Exception:
+        except (ValueError, TypeError):
             return False
 
 
@@ -83,7 +83,7 @@ class PasswordValidator:
 
         if cls.REQUIRE_SPECIAL:
             special_chars = "!@#$%^&*()_+-=[]{}|;:,.<>?"
-            if not any(c in special_chars for c in password):
+            if all(c not in special_chars for c in password):
                 return False, "Senha deve conter pelo menos um caractere especial"
 
         return True, ""
@@ -107,29 +107,28 @@ class JWTManager:
         Returns:
             Token JWT codificado
         """
-        to_encode = data.copy()
-
+        now = datetime.utcnow()
+        
         # Define expiração
         if expires_delta:
-            expire = datetime.utcnow() + expires_delta
+            expire = now + expires_delta
         else:
-            expire = datetime.utcnow() + timedelta(
+            expire = now + timedelta(
                 minutes=settings.access_token_expire_minutes
             )
 
-        to_encode.update({
-            "exp": expire,
-            "iat": datetime.utcnow()
-        })
+        # Converte datetime para UNIX timestamp
+        to_encode = data.copy() | {
+            "exp": int(expire.timestamp()),
+            "iat": int(now.timestamp())
+        }
 
         # Codifica o token
-        encoded_jwt = jwt.encode(
+        return jwt.encode(
             to_encode,
             settings.secret_key,
             algorithm="HS256"
         )
-
-        return encoded_jwt
 
     @staticmethod
     def decode_access_token(token: str) -> Optional[dict]:
@@ -143,12 +142,11 @@ class JWTManager:
             Dados decodificados do token ou None se inválido
         """
         try:
-            payload = jwt.decode(
+            return jwt.decode(
                 token,
                 settings.secret_key,
                 algorithms=["HS256"]
             )
-            return payload
         except jwt.ExpiredSignatureError:
             # Token expirado
             return None

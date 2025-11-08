@@ -12,6 +12,8 @@ from src.core.schemas_api import (
     RegisterRequest,
     LoginRequest,
     AuthResponse,
+    AuthDataResponse,
+    AuthUserResponse,
     BaseResponse
 )
 from src.application.auth_service import AuthService
@@ -70,14 +72,14 @@ async def register(
         return AuthResponse(
             code="REGISTER_SUCCESS",
             message="Usuário registrado com sucesso",
-            data={
-                "user": {
-                    "id": usuario.id,
-                    "nome": usuario.nome,
-                    "email": usuario.email
-                },
-                "token": token
-            }
+            data=AuthDataResponse(
+                user=AuthUserResponse(
+                    id=usuario.id,
+                    nome=usuario.nome,
+                    email=usuario.email
+                ),
+                token=token
+            )
         )
 
     except BusinessRuleViolationError as e:
@@ -87,7 +89,7 @@ async def register(
                 "code": "VALIDATION_ERROR",
                 "message": str(e)
             }
-        )
+        ) from e
     except DuplicateEntityError as e:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -95,7 +97,7 @@ async def register(
                 "code": "EMAIL_ALREADY_EXISTS",
                 "message": str(e)
             }
-        )
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -103,7 +105,7 @@ async def register(
                 "code": "INTERNAL_ERROR",
                 "message": "Erro ao registrar usuário"
             }
-        )
+        ) from e
 
 
 @router.post(
@@ -143,14 +145,14 @@ async def login(
         return AuthResponse(
             code="LOGIN_SUCCESS",
             message="Login realizado com sucesso",
-            data={
-                "user": {
-                    "id": usuario.id,
-                    "nome": usuario.nome,
-                    "email": usuario.email
-                },
-                "token": token
-            }
+            data=AuthDataResponse(
+                user=AuthUserResponse(
+                    id=usuario.id,
+                    nome=usuario.nome,
+                    email=usuario.email
+                ),
+                token=token
+            )
         )
 
     except BusinessRuleViolationError as e:
@@ -161,7 +163,7 @@ async def login(
                 "code": "INVALID_CREDENTIALS",
                 "message": "Credenciais inválidas"
             }
-        )
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -169,7 +171,7 @@ async def login(
                 "code": "INTERNAL_ERROR",
                 "message": "Erro ao realizar login"
             }
-        )
+        ) from e
 
 
 @router.get(

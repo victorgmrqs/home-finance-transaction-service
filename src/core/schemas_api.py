@@ -437,9 +437,15 @@ class AuthUserResponse(BaseModel):
     email: str = Field(..., description="Email do usuário")
 
 
+class AuthDataResponse(BaseModel):
+    """Schema de dados de autenticação"""
+    user: AuthUserResponse = Field(..., description="Dados do usuário")
+    token: str = Field(..., description="Token JWT de autenticação")
+
+
 class AuthResponse(BaseResponse):
     """Schema de resposta para login/registro bem-sucedido"""
-    data: dict = Field(..., description="Dados de autenticação")
+    data: AuthDataResponse = Field(..., description="Dados de autenticação")
 
     class Config:
         json_schema_extra = {
@@ -452,7 +458,7 @@ class AuthResponse(BaseResponse):
                         "nome": "João Silva",
                         "email": "joao@example.com"
                     },
-                    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
                 }
             }
         }

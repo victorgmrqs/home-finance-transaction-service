@@ -161,7 +161,6 @@ class AuthService:
             return None
 
         try:
-            usuario = await self.usuario_repository.get_by_id(int(user_id))
-            return usuario
+            return await self.usuario_repository.get_by_id(int(user_id))
         except EntityNotFoundError:
             return None
