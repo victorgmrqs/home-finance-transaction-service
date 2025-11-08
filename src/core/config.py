@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     # Configurações de segurança
     secret_key: str = Field(env="SECRET_KEY")
     access_token_expire_minutes: int = Field(default=30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
+    bcrypt_rounds: int = Field(default=12, env="BCRYPT_ROUNDS")
     
     # Configurações de rate limiting
     rate_limit_requests: int = Field(default=100, env="RATE_LIMIT_REQUESTS")

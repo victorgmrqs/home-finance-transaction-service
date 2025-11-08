@@ -19,6 +19,7 @@ class Usuario:
     id: Optional[int]
     nome: str
     email: Optional[str] = None
+    password_hash: Optional[str] = None
     criado_em: Optional[datetime] = None
     atualizado_em: Optional[datetime] = None
 

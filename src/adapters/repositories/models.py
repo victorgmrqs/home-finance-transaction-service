@@ -18,7 +18,8 @@ class UsuarioModel(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String(255), nullable=False, index=True)
-    email = Column(String(255), nullable=True, index=True)
+    email = Column(String(255), nullable=True, unique=True, index=True)
+    password_hash = Column(String(255), nullable=True)
     criado_em = Column(DateTime, server_default=func.now(), nullable=False)
     atualizado_em = Column(
         DateTime,
@@ -29,6 +30,7 @@ class UsuarioModel(Base):
 
     # Relacionamento
     paineis = relationship("PainelModel", back_populates="usuario", cascade="all, delete-orphan")
+    categorias = relationship("CategoriaModel", back_populates="usuario", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Usuario(id={self.id}, nome='{self.nome}', email='{self.email}')>"

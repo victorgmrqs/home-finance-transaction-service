@@ -24,6 +24,7 @@ class UsuarioRepository:
             id=model.id,
             nome=model.nome,
             email=model.email,
+            password_hash=model.password_hash,
             criado_em=model.criado_em,
             atualizado_em=model.atualizado_em
         )
@@ -33,7 +34,8 @@ class UsuarioRepository:
         return UsuarioModel(
             id=usuario.id,
             nome=usuario.nome,
-            email=usuario.email
+            email=usuario.email,
+            password_hash=usuario.password_hash
         )
 
     async def create(self, usuario: Usuario) -> Usuario:
@@ -116,6 +118,8 @@ class UsuarioRepository:
             # Atualizar campos
             model.nome = usuario.nome
             model.email = usuario.email
+            if usuario.password_hash:
+                model.password_hash = usuario.password_hash
             model.atualizado_em = datetime.now(timezone.utc)
 
             await self.session.commit()

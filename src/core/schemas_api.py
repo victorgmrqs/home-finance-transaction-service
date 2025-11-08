@@ -413,3 +413,52 @@ class TransactionFilters(BaseModel):
     local_id: Optional[int] = Field(None, description="ID do local")
     page: int = Field(1, ge=1, description="Número da página")
     page_size: int = Field(50, ge=1, le=100, description="Tamanho da página")
+
+
+# ===== AUTH SCHEMAS =====
+
+class RegisterRequest(BaseModel):
+    """Schema para registro de novo usuário"""
+    nome: str = Field(..., min_length=1, max_length=255, description="Nome do usuário")
+    email: str = Field(..., min_length=3, max_length=255, description="Email do usuário")
+    password: str = Field(..., min_length=8, max_length=128, description="Senha do usuário")
+
+
+class LoginRequest(BaseModel):
+    """Schema para login de usuário"""
+    email: str = Field(..., description="Email do usuário")
+    password: str = Field(..., description="Senha do usuário")
+
+
+class AuthUserResponse(BaseModel):
+    """Schema de resposta com dados do usuário autenticado"""
+    id: int = Field(..., description="ID do usuário")
+    nome: str = Field(..., description="Nome do usuário")
+    email: str = Field(..., description="Email do usuário")
+
+
+class AuthDataResponse(BaseModel):
+    """Schema de dados de autenticação"""
+    user: AuthUserResponse = Field(..., description="Dados do usuário")
+    token: str = Field(..., description="Token JWT de autenticação")
+
+
+class AuthResponse(BaseResponse):
+    """Schema de resposta para login/registro bem-sucedido"""
+    data: AuthDataResponse = Field(..., description="Dados de autenticação")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "code": "AUTH_SUCCESS",
+                "message": "Autenticação realizada com sucesso",
+                "data": {
+                    "user": {
+                        "id": 1,
+                        "nome": "João Silva",
+                        "email": "joao@example.com"
+                    },
+                    "token": "<JWT_TOKEN_AQUI>"
+                }
+            }
+        }
