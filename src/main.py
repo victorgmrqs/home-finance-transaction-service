@@ -66,6 +66,15 @@ app.add_middleware(
 # Middleware de autenticação mock
 app.add_middleware(MockAuthMiddleware, environment=settings.environment)
 
+# Configurar rate limiting global
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # Registrar exception handlers
 register_exception_handlers(app)
 
@@ -80,6 +89,10 @@ from src.adapters.controllers.painel_controller import router as painel_router
 from src.adapters.controllers.painel_sharing_controller import router as painel_sharing_router
 from src.adapters.controllers.painel_analytics_controller import router as painel_analytics_router
 from src.adapters.controllers.categoria_controller import router as categoria_router
+from src.adapters.controllers.auth_controller import router as auth_router
+
+# Auth routers (public, no version prefix)
+app.include_router(auth_router, prefix="/api/v1", tags=["Autenticação"])
 
 # Business routers (versionamento /api/v1)
 app.include_router(transaction_router, prefix="/api/v1", tags=["Transactions"])
