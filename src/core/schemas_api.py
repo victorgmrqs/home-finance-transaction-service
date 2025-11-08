@@ -458,7 +458,7 @@ class AuthResponse(BaseResponse):
                         "nome": "João Silva",
                         "email": "joao@example.com"
                     },
-                    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                    "token": "<JWT_TOKEN_AQUI>"
                 }
             }
         }
