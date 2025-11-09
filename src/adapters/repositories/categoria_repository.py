@@ -3,13 +3,14 @@ Categoria Repository
 Implementação do repositório de categorias usando SQLAlchemy
 """
 
-from typing import Optional, List
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_
-from src.domain.models.categoria import Categoria
+
 from src.adapters.repositories.models import CategoriaModel
 from src.domain.exceptions import DatabaseException
+from src.domain.models.categoria import Categoria
 
 
 class CategoriaRepository:
@@ -52,7 +53,7 @@ class CategoriaRepository:
             await self.session.rollback()
             raise DatabaseException(f"Erro ao criar categoria: {str(e)}", e)
 
-    async def get_by_id(self, categoria_id: int) -> Optional[Categoria]:
+    async def get_by_id(self, categoria_id: int) -> Categoria | None:
         """Busca categoria por ID"""
         try:
             stmt = select(CategoriaModel).where(CategoriaModel.id == categoria_id)
@@ -66,7 +67,7 @@ class CategoriaRepository:
         except Exception as e:
             raise DatabaseException(f"Erro ao buscar categoria: {str(e)}", e)
 
-    async def list_all_for_user(self, usuario_id: int) -> List[Categoria]:
+    async def list_all_for_user(self, usuario_id: int) -> list[Categoria]:
         """
         Lista todas as categorias disponíveis para um usuário:
         - Categorias padrão do sistema (is_default=True)
@@ -75,9 +76,9 @@ class CategoriaRepository:
         try:
             stmt = select(CategoriaModel).where(
                 or_(
-                    CategoriaModel.is_default == True,  # Categorias padrão
+                    CategoriaModel.is_default,  # Categorias padrão
                     and_(
-                        CategoriaModel.is_default == False,
+                        ~CategoriaModel.is_default,
                         CategoriaModel.usuario_id == usuario_id
                     )  # Categorias customizadas do usuário
                 )
@@ -93,11 +94,11 @@ class CategoriaRepository:
         except Exception as e:
             raise DatabaseException(f"Erro ao listar categorias: {str(e)}", e)
 
-    async def list_default_categories(self) -> List[Categoria]:
+    async def list_default_categories(self) -> list[Categoria]:
         """Lista apenas as categorias padrão do sistema"""
         try:
             stmt = select(CategoriaModel).where(
-                CategoriaModel.is_default == True
+                CategoriaModel.is_default
             ).order_by(CategoriaModel.nome)
 
             result = await self.session.execute(stmt)
@@ -107,12 +108,12 @@ class CategoriaRepository:
         except Exception as e:
             raise DatabaseException(f"Erro ao listar categorias padrão: {str(e)}", e)
 
-    async def list_user_categories(self, usuario_id: int) -> List[Categoria]:
+    async def list_user_categories(self, usuario_id: int) -> list[Categoria]:
         """Lista apenas as categorias customizadas do usuário"""
         try:
             stmt = select(CategoriaModel).where(
                 and_(
-                    CategoriaModel.is_default == False,
+                    ~CategoriaModel.is_default,
                     CategoriaModel.usuario_id == usuario_id
                 )
             ).order_by(CategoriaModel.nome)
@@ -124,7 +125,7 @@ class CategoriaRepository:
         except Exception as e:
             raise DatabaseException(f"Erro ao listar categorias do usuário: {str(e)}", e)
 
-    async def find_by_name_and_user(self, nome: str, usuario_id: int) -> Optional[Categoria]:
+    async def find_by_name_and_user(self, nome: str, usuario_id: int) -> Categoria | None:
         """Busca categoria por nome e usuário (para verificar duplicatas)"""
         try:
             stmt = select(CategoriaModel).where(
@@ -143,7 +144,7 @@ class CategoriaRepository:
         except Exception as e:
             raise DatabaseException(f"Erro ao buscar categoria por nome: {str(e)}", e)
 
-    async def update(self, categoria_id: int, categoria: Categoria) -> Optional[Categoria]:
+    async def update(self, categoria_id: int, categoria: Categoria) -> Categoria | None:
         """Atualiza uma categoria"""
         try:
             stmt = select(CategoriaModel).where(CategoriaModel.id == categoria_id)
@@ -156,7 +157,7 @@ class CategoriaRepository:
             # Atualizar campos
             model.nome = categoria.nome
             model.descricao = categoria.descricao
-            model.atualizado_em = datetime.now(timezone.utc)
+            model.atualizado_em = datetime.now(UTC)
 
             await self.session.commit()
             await self.session.refresh(model)
@@ -187,7 +188,7 @@ class CategoriaRepository:
         """Conta quantas transações usam esta categoria"""
         try:
             from src.adapters.repositories.models import TransactionModel
-            
+
             stmt = select(func.count(TransactionModel.id)).where(
                 TransactionModel.categoria == categoria_id
             )

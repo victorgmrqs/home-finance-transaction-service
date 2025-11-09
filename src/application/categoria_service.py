@@ -4,10 +4,10 @@ Serviço de aplicação para categorias
 Orquestra a lógica de negócio relacionada a categorias
 """
 
-from typing import Optional, List
+
 from src.adapters.repositories.categoria_repository import CategoriaRepository
-from src.domain.models.categoria import Categoria
 from src.domain.exceptions import DatabaseException
+from src.domain.models.categoria import Categoria
 
 
 class CategoriaService:
@@ -45,7 +45,7 @@ class CategoriaService:
 
         return await self.repository.create(categoria)
 
-    async def get_categoria(self, categoria_id: int) -> Optional[Categoria]:
+    async def get_categoria(self, categoria_id: int) -> Categoria | None:
         """
         Busca categoria por ID
 
@@ -57,7 +57,7 @@ class CategoriaService:
         """
         return await self.repository.get_by_id(categoria_id)
 
-    async def list_categorias_for_user(self, usuario_id: int) -> List[Categoria]:
+    async def list_categorias_for_user(self, usuario_id: int) -> list[Categoria]:
         """
         Lista todas as categorias disponíveis para um usuário:
         - Categorias padrão do sistema
@@ -71,7 +71,7 @@ class CategoriaService:
         """
         return await self.repository.list_all_for_user(usuario_id)
 
-    async def list_default_categories(self) -> List[Categoria]:
+    async def list_default_categories(self) -> list[Categoria]:
         """
         Lista apenas as categorias padrão do sistema
 
@@ -80,7 +80,7 @@ class CategoriaService:
         """
         return await self.repository.list_default_categories()
 
-    async def list_user_categories(self, usuario_id: int) -> List[Categoria]:
+    async def list_user_categories(self, usuario_id: int) -> list[Categoria]:
         """
         Lista apenas as categorias customizadas do usuário
 
@@ -97,7 +97,7 @@ class CategoriaService:
         categoria_id: int,
         categoria: Categoria,
         usuario_id: int
-    ) -> Optional[Categoria]:
+    ) -> Categoria | None:
         """
         Atualiza uma categoria customizada
 

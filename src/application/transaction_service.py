@@ -4,13 +4,14 @@ Serviço de aplicação para transações
 Orquestra a lógica de negócio relacionada a transações
 """
 
-from typing import Optional, List
 from datetime import date
-from dateutil.relativedelta import relativedelta
 from decimal import Decimal
-from src.ports.transaction_port import ITransactionRepository
-from src.domain.models.transaction import Transaction
+
+from dateutil.relativedelta import relativedelta
+
 from src.domain.exceptions import TransactionNotFoundException
+from src.domain.models.transaction import Transaction
+from src.ports.transaction_port import ITransactionRepository
 
 
 class TransactionService:
@@ -72,14 +73,14 @@ class TransactionService:
         self,
         limit: int = 10,
         offset: int = 0,
-        tipo: Optional[str] = None,
-        categoria: Optional[str] = None,
-        local_id: Optional[int] = None,
-        painel_id: Optional[int] = None,
-        descricao: Optional[str] = None,
-        data_inicio: Optional[date] = None,
-        data_fim: Optional[date] = None
-    ) -> tuple[List[Transaction], int]:
+        tipo: str | None = None,
+        categoria: str | None = None,
+        local_id: int | None = None,
+        painel_id: int | None = None,
+        descricao: str | None = None,
+        data_inicio: date | None = None,
+        data_fim: date | None = None
+    ) -> tuple[list[Transaction], int]:
         """
         Lista transações com filtros e paginação
 
@@ -243,7 +244,7 @@ class TransactionService:
         # Retornar primeira parcela (transação "mãe")
         return transacoes_criadas[0]
 
-    async def list_installments(self, transaction_id: int) -> List[Transaction]:
+    async def list_installments(self, transaction_id: int) -> list[Transaction]:
         """
         Lista todas as parcelas de uma transação parcelada
 

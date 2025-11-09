@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class IHealthcheckRepository(ABC):
     @abstractmethod
     async def check_db(self) -> dict:

@@ -6,7 +6,6 @@ Representa uma transação financeira no sistema
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Optional
 from enum import Enum
 
 
@@ -56,32 +55,32 @@ class Transaction:
     - recorrencia_ativa: Se False, para de gerar novas recorrências
     - proxima_geracao: Próxima data em que deve gerar recorrência
     """
-    id: Optional[int]
+    id: int | None
     data: date
     descricao: str
     valor: Decimal
     tipo: TransactionType
     categoria: str
     painel_id: int
-    recorrencia: Optional[Recurrence] = None
-    parcelas: Optional[int] = None
+    recorrencia: Recurrence | None = None
+    parcelas: int | None = None
     tipo_divisao: TipoDivisao = TipoDivisao.PESSOAL
-    valor_por_pessoa: Optional[Decimal] = None
-    porcentagem_divisao: Optional[int] = None
-    local_id: Optional[int] = None
+    valor_por_pessoa: Decimal | None = None
+    porcentagem_divisao: int | None = None
+    local_id: int | None = None
 
     # Campos de parcelamento
-    parcela_numero: Optional[int] = None
-    transacao_mae_id: Optional[int] = None
+    parcela_numero: int | None = None
+    transacao_mae_id: int | None = None
     eh_parcela: bool = False
 
     # Campos de recorrência
-    transacao_recorrente_origem_id: Optional[int] = None
+    transacao_recorrente_origem_id: int | None = None
     recorrencia_ativa: bool = True
-    proxima_geracao: Optional[date] = None
+    proxima_geracao: date | None = None
 
-    criado_em: Optional[datetime] = None
-    atualizado_em: Optional[datetime] = None
+    criado_em: datetime | None = None
+    atualizado_em: datetime | None = None
 
     def __post_init__(self):
         """Valida a transação após inicialização"""
@@ -139,7 +138,7 @@ class Transaction:
         """Verifica se é uma saída (despesa)"""
         return self.tipo == TransactionType.SAIDA
 
-    def valor_parcela(self) -> Optional[Decimal]:
+    def valor_parcela(self) -> Decimal | None:
         """Calcula o valor de cada parcela (se aplicável)"""
         if not self.is_parcelada():
             return None

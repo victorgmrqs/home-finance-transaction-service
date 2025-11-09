@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends
-from src.application.healthcheck_service import HealthcheckService
-from src.adapters.repositories.healthcheck_repository import HealthCheckRepository
+
 from src.adapters.presenters.healthcheck_presenter import present_healthcheck
+from src.adapters.repositories.healthcheck_repository import HealthCheckRepository
+from src.application.healthcheck_service import HealthcheckService
 from src.db.session import get_session  # factory do SQLAlchemy Session
 
 router = APIRouter()

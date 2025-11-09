@@ -110,3 +110,21 @@ class DuplicatePainelException(DomainException):
         super().__init__(message, code="DUPLICATE_PAINEL")
         self.nome = nome
         self.usuario_id = usuario_id
+
+
+class BusinessRuleViolationError(DomainException):
+    """Exceção para violação de regras de negócio"""
+    def __init__(self, message: str):
+        super().__init__(message, code="BUSINESS_RULE_VIOLATION")
+
+
+class DuplicateEntityError(DomainException):
+    """Exceção quando entidade duplicada (ex: email já cadastrado)"""
+    def __init__(self, message: str):
+        super().__init__(message, code="DUPLICATE_ENTITY")
+
+
+class EntityNotFoundError(DomainException):
+    """Exceção quando entidade não é encontrada"""
+    def __init__(self, message: str):
+        super().__init__(message, code="ENTITY_NOT_FOUND")

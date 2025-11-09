@@ -3,33 +3,33 @@ Transaction Controller
 Endpoints HTTP para gerenciamento de transações
 """
 
+from calendar import monthrange
+from datetime import date
+
 from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional
-from datetime import date
-from calendar import monthrange
 
-from src.db.session import get_session
-from src.adapters.repositories.transaction_repository import TransactionRepository
-from src.application.transaction_service import TransactionService
+from src.adapters.middlewares.auth_middleware import get_current_user_id
 from src.adapters.presenters.transaction_presenter import (
     present_transaction_created,
+    present_transaction_deleted,
     present_transaction_detail,
     present_transaction_list,
     present_transaction_updated,
-    present_transaction_deleted
 )
+from src.adapters.repositories.transaction_repository import TransactionRepository
+from src.application.transaction_service import TransactionService
 from src.core.schemas_api import (
-    TransactionCreateRequest, 
-    TransactionUpdateRequest,
+    TransactionCreateRequest,
     TransactionCreateResponse,
+    TransactionDeleteResponse,
     TransactionDetailResponse,
     TransactionListResponse,
+    TransactionUpdateRequest,
     TransactionUpdateResponse,
-    TransactionDeleteResponse
 )
-from src.domain.models.transaction import Transaction, TransactionType, Recurrence, TipoDivisao
-from src.adapters.middlewares.auth_middleware import get_current_user_id
+from src.db.session import get_session
+from src.domain.models.transaction import Recurrence, TipoDivisao, Transaction, TransactionType
 
 router = APIRouter(tags=["Transactions"])
 
@@ -94,13 +94,13 @@ async def list_transactions(
     painel_id: int = Query(..., description="ID do painel (obrigatório)"),
     page: int = Query(1, ge=1, description="Número da página"),
     page_size: int = Query(50, ge=1, le=100, description="Tamanho da página"),
-    tipo: Optional[str] = Query(None, pattern="^(ENTRADA|SAIDA)$", description="Filtrar por tipo"),
-    categoria: Optional[str] = Query(None, description="Filtrar por categoria"),
-    local_id: Optional[int] = Query(None, description="Filtrar por ID do local"),
-    mes: Optional[str] = Query(None, pattern="^\\d{4}-\\d{2}$", description="Filtrar por mês (YYYY-MM)"),
-    data_inicio: Optional[date] = Query(None, description="Data inicial (YYYY-MM-DD)"),
-    data_fim: Optional[date] = Query(None, description="Data final (YYYY-MM-DD)"),
-    descricao: Optional[str] = Query(None, description="Buscar por descrição"),
+    tipo: str | None = Query(None, pattern="^(ENTRADA|SAIDA)$", description="Filtrar por tipo"),
+    categoria: str | None = Query(None, description="Filtrar por categoria"),
+    local_id: int | None = Query(None, description="Filtrar por ID do local"),
+    mes: str | None = Query(None, pattern="^\\d{4}-\\d{2}$", description="Filtrar por mês (YYYY-MM)"),
+    data_inicio: date | None = Query(None, description="Data inicial (YYYY-MM-DD)"),
+    data_fim: date | None = Query(None, description="Data final (YYYY-MM-DD)"),
+    descricao: str | None = Query(None, description="Buscar por descrição"),
     session: AsyncSession = Depends(get_session),
     usuario_id: int = Depends(get_current_user_id)
 ):

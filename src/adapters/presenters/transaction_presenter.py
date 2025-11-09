@@ -3,7 +3,7 @@ Transaction Presenter
 Formatação de responses para endpoints de transações
 """
 
-from typing import List
+
 from src.domain.models.transaction import Transaction
 from src.shared.responses import success_response
 
@@ -56,7 +56,7 @@ def present_transaction_detail(transaction: Transaction) -> dict:
 
 
 def present_transaction_list(
-    transactions: List[Transaction],
+    transactions: list[Transaction],
     total: int,
     limit: int,
     offset: int

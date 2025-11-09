@@ -3,14 +3,15 @@ Local Repository
 Implementação do repositório de locais usando SQLAlchemy
 """
 
-from typing import Optional, List
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from src.ports.local_port import ILocalRepository
-from src.domain.models.local import Local
+
 from src.adapters.repositories.models import LocalModel
 from src.domain.exceptions import DatabaseException, DuplicateCNPJException
+from src.domain.models.local import Local
+from src.ports.local_port import ILocalRepository
 
 
 class LocalRepository(ILocalRepository):
@@ -64,7 +65,7 @@ class LocalRepository(ILocalRepository):
             await self.session.rollback()
             raise DatabaseException(f"Erro ao criar local: {str(e)}", e)
 
-    async def get_by_id(self, local_id: int) -> Optional[Local]:
+    async def get_by_id(self, local_id: int) -> Local | None:
         """Busca local por ID"""
         try:
             stmt = select(LocalModel).where(LocalModel.id == local_id)
@@ -78,7 +79,7 @@ class LocalRepository(ILocalRepository):
         except Exception as e:
             raise DatabaseException(f"Erro ao buscar local: {str(e)}", e)
 
-    async def get_by_cnpj(self, cnpj: str) -> Optional[Local]:
+    async def get_by_cnpj(self, cnpj: str) -> Local | None:
         """Busca local por CNPJ"""
         try:
             # Limpar CNPJ para busca (remover formatação)
@@ -95,7 +96,7 @@ class LocalRepository(ILocalRepository):
         except Exception as e:
             raise DatabaseException(f"Erro ao buscar local por CNPJ: {str(e)}", e)
 
-    async def list_all(self, limit: int = 100, offset: int = 0) -> List[Local]:
+    async def list_all(self, limit: int = 100, offset: int = 0) -> list[Local]:
         """Lista todos os locais"""
         try:
             stmt = select(LocalModel).order_by(LocalModel.nome_fantasia).limit(limit).offset(offset)
@@ -106,7 +107,7 @@ class LocalRepository(ILocalRepository):
         except Exception as e:
             raise DatabaseException(f"Erro ao listar locais: {str(e)}", e)
 
-    async def update(self, local_id: int, local: Local) -> Optional[Local]:
+    async def update(self, local_id: int, local: Local) -> Local | None:
         """Atualiza um local"""
         try:
             stmt = select(LocalModel).where(LocalModel.id == local_id)
@@ -128,7 +129,7 @@ class LocalRepository(ILocalRepository):
             model.razao_social = local.razao_social
             model.categoria = local.categoria
             model.endereco = local.endereco
-            model.atualizado_em = datetime.now(timezone.utc)
+            model.atualizado_em = datetime.now(UTC)
 
             await self.session.commit()
             await self.session.refresh(model)

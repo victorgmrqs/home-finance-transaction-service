@@ -3,26 +3,25 @@ Controller de Autenticação
 Gerencia endpoints de login e registro de usuários
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.schemas_api import (
-    RegisterRequest,
-    LoginRequest,
-    AuthResponse,
-    AuthDataResponse,
-    AuthUserResponse,
-    BaseResponse
-)
-from src.application.auth_service import AuthService
 from src.adapters.repositories.usuario_repository import UsuarioRepository
+from src.application.auth_service import AuthService
+from src.core.schemas_api import (
+    AuthDataResponse,
+    AuthResponse,
+    AuthUserResponse,
+    BaseResponse,
+    LoginRequest,
+    RegisterRequest,
+)
 from src.db.session import get_session
 from src.domain.exceptions import (
     BusinessRuleViolationError,
     DuplicateEntityError,
-    EntityNotFoundError
 )
 
 router = APIRouter()

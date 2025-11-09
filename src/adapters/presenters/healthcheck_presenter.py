@@ -1,4 +1,5 @@
-from src.shared.responses import success_response, error_response
+from src.shared.responses import error_response, success_response
+
 
 def present_healthcheck(result: dict):
     if result["database"].get("status") == "OK":

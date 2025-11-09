@@ -5,11 +5,11 @@ Formatadores de resposta para endpoints de categorias
 
 from src.core.schemas_api import (
     CategoriaCreateResponse,
+    CategoriaDeleteResponse,
     CategoriaDetailResponse,
     CategoriaListResponse,
+    CategoriaResponse,
     CategoriaUpdateResponse,
-    CategoriaDeleteResponse,
-    CategoriaResponse
 )
 from src.domain.models.categoria import Categoria
 

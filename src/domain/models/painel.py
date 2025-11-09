@@ -5,7 +5,6 @@ Representa um painel de controle financeiro vinculado a um usuário
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 
 @dataclass
@@ -21,13 +20,13 @@ class Painel:
     - CONTA_BANCARIA: Conta bancária
     - DINHEIRO: Dinheiro físico
     """
-    id: Optional[int]
+    id: int | None
     nome: str
     usuario_id: int
     tipo_conta: str = "CARTAO_CREDITO"
-    descricao: Optional[str] = None
-    criado_em: Optional[datetime] = None
-    atualizado_em: Optional[datetime] = None
+    descricao: str | None = None
+    criado_em: datetime | None = None
+    atualizado_em: datetime | None = None
 
     def __post_init__(self):
         """Valida o painel após inicialização"""

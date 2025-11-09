@@ -4,13 +4,13 @@ Serviço de aplicação para painéis
 Orquestra a lógica de negócio relacionada a painéis
 """
 
-from typing import Optional, List
 from datetime import date
 from decimal import Decimal
+
 from src.adapters.repositories.painel_repository import PainelRepository
 from src.adapters.repositories.transaction_repository import TransactionRepository
-from src.domain.models.painel import Painel
 from src.domain.exceptions import DatabaseException
+from src.domain.models.painel import Painel
 
 
 class PainelService:
@@ -20,7 +20,7 @@ class PainelService:
     Coordena operações de CRUD e lógica de negócio
     """
 
-    def __init__(self, repository: PainelRepository, transaction_repository: Optional[TransactionRepository] = None):
+    def __init__(self, repository: PainelRepository, transaction_repository: TransactionRepository | None = None):
         self.repository = repository
         self.transaction_repository = transaction_repository
 
@@ -40,7 +40,7 @@ class PainelService:
         # A validação já ocorre no __post_init__ da entidade
         return await self.repository.create(painel)
 
-    async def get_painel(self, painel_id: int) -> Optional[Painel]:
+    async def get_painel(self, painel_id: int) -> Painel | None:
         """
         Busca painel por ID
 
@@ -52,7 +52,7 @@ class PainelService:
         """
         return await self.repository.get_by_id(painel_id)
 
-    async def get_painel_by_usuario_and_nome(self, usuario_id: int, nome: str) -> Optional[Painel]:
+    async def get_painel_by_usuario_and_nome(self, usuario_id: int, nome: str) -> Painel | None:
         """
         Busca painel por usuário e nome
 
@@ -70,8 +70,8 @@ class PainelService:
         usuario_id: int,
         limit: int = 10,
         offset: int = 0,
-        nome: Optional[str] = None
-    ) -> tuple[List[Painel], int]:
+        nome: str | None = None
+    ) -> tuple[list[Painel], int]:
         """
         Lista painéis de um usuário com filtros e paginação
 
@@ -99,9 +99,9 @@ class PainelService:
         self,
         limit: int = 10,
         offset: int = 0,
-        usuario_id: Optional[int] = None,
-        nome: Optional[str] = None
-    ) -> tuple[List[Painel], int]:
+        usuario_id: int | None = None,
+        nome: str | None = None
+    ) -> tuple[list[Painel], int]:
         """
         Lista painéis com filtros e paginação
 
@@ -129,7 +129,7 @@ class PainelService:
         self,
         painel_id: int,
         painel: Painel
-    ) -> Optional[Painel]:
+    ) -> Painel | None:
         """
         Atualiza um painel existente
 
@@ -158,8 +158,8 @@ class PainelService:
     async def calcular_balanco(
         self,
         painel_id: int,
-        data_inicio: Optional[date] = None,
-        data_fim: Optional[date] = None
+        data_inicio: date | None = None,
+        data_fim: date | None = None
     ) -> dict:
         """
         Calcula o balanço de um painel

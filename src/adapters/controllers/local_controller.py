@@ -6,25 +6,25 @@ Endpoints HTTP para gerenciamento de locais
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.db.session import get_session
-from src.adapters.repositories.local_repository import LocalRepository
-from src.application.local_service import LocalService
 from src.adapters.presenters.local_presenter import (
     present_local_created,
+    present_local_deleted,
     present_local_detail,
     present_local_list,
     present_local_updated,
-    present_local_deleted
 )
+from src.adapters.repositories.local_repository import LocalRepository
+from src.application.local_service import LocalService
 from src.core.schemas_api import (
-    LocalCreateRequest, 
-    LocalUpdateRequest,
+    LocalCreateRequest,
     LocalCreateResponse,
+    LocalDeleteResponse,
     LocalDetailResponse,
     LocalListResponse,
+    LocalUpdateRequest,
     LocalUpdateResponse,
-    LocalDeleteResponse
 )
+from src.db.session import get_session
 from src.domain.models.local import Local
 
 router = APIRouter(tags=["Locais"])

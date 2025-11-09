@@ -3,31 +3,31 @@ Painel Controller
 Endpoints HTTP para CRUD de painéis
 """
 
-from fastapi import APIRouter, Depends, Query, status, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional
 
-from src.db.session import get_session
-from src.adapters.repositories.painel_repository import PainelRepository
-from src.application.painel_service import PainelService
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.adapters.presenters.painel_presenter import (
     present_painel_created,
+    present_painel_deleted,
     present_painel_detail,
     present_painel_list,
     present_painel_updated,
-    present_painel_deleted
 )
+from src.adapters.repositories.painel_repository import PainelRepository
+from src.application.painel_service import PainelService
 from src.core.schemas_api import (
-    PainelCreateRequest, 
-    PainelUpdateRequest,
+    PainelCreateRequest,
     PainelCreateResponse,
+    PainelDeleteResponse,
     PainelDetailResponse,
     PainelListResponse,
+    PainelUpdateRequest,
     PainelUpdateResponse,
-    PainelDeleteResponse
 )
-from src.domain.models.painel import Painel
+from src.db.session import get_session
 from src.domain.exceptions import DuplicatePainelException
+from src.domain.models.painel import Painel
 
 router = APIRouter(tags=["Painéis"])
 
@@ -76,8 +76,8 @@ async def create_painel(
 async def list_painels(
     limit: int = Query(10, ge=1, le=100, description="Limite de resultados"),
     offset: int = Query(0, ge=0, description="Offset para paginação"),
-    usuario_id: Optional[int] = Query(None, description="Filtrar por usuário"),
-    nome: Optional[str] = Query(None, description="Filtrar por nome"),
+    usuario_id: int | None = Query(None, description="Filtrar por usuário"),
+    nome: str | None = Query(None, description="Filtrar por nome"),
     session: AsyncSession = Depends(get_session)
 ):
     """
@@ -107,7 +107,7 @@ async def list_painels_by_usuario(
     usuario_id: int,
     limit: int = Query(10, ge=1, le=100, description="Limite de resultados"),
     offset: int = Query(0, ge=0, description="Offset para paginação"),
-    nome: Optional[str] = Query(None, description="Filtrar por nome"),
+    nome: str | None = Query(None, description="Filtrar por nome"),
     session: AsyncSession = Depends(get_session)
 ):
     """

@@ -4,10 +4,10 @@ Serviço de aplicação para locais
 Orquestra a lógica de negócio relacionada a locais
 """
 
-from typing import Optional, List
-from src.ports.local_port import ILocalRepository
-from src.domain.models.local import Local
+
 from src.domain.exceptions import LocalNotFoundException
+from src.domain.models.local import Local
+from src.ports.local_port import ILocalRepository
 
 
 class LocalService:
@@ -60,7 +60,7 @@ class LocalService:
 
         return local
 
-    async def get_local_by_cnpj(self, cnpj: str) -> Optional[Local]:
+    async def get_local_by_cnpj(self, cnpj: str) -> Local | None:
         """
         Busca local por CNPJ
 
@@ -76,7 +76,7 @@ class LocalService:
         self,
         limit: int = 100,
         offset: int = 0
-    ) -> tuple[List[Local], int]:
+    ) -> tuple[list[Local], int]:
         """
         Lista locais com paginação
 

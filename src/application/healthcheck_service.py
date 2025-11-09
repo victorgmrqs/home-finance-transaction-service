@@ -4,9 +4,10 @@ Serviço de verificação de saúde da aplicação
 """
 
 import time
-from datetime import datetime, timezone
-from src.ports.healthcheck_port import IHealthcheckRepository
+from datetime import UTC, datetime
+
 from src.core.config import settings
+from src.ports.healthcheck_port import IHealthcheckRepository
 
 
 class HealthcheckService:
@@ -32,7 +33,7 @@ class HealthcheckService:
 
         return {
             "status": "healthy" if db_status["status"] == "OK" else "unhealthy",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "version": settings.app_version,
             "environment": settings.environment,
             "database_status": db_status["status"],

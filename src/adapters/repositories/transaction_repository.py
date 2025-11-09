@@ -3,14 +3,15 @@ Transaction Repository
 Implementação do repositório de transações usando SQLAlchemy
 """
 
-from typing import Optional, List
-from datetime import datetime, timezone, date
+from datetime import date, datetime
+
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from src.ports.transaction_port import ITransactionRepository
-from src.domain.models.transaction import Transaction, TransactionType, Recurrence, TipoDivisao
+
 from src.adapters.repositories.models import TransactionModel
 from src.domain.exceptions import DatabaseException
+from src.domain.models.transaction import Recurrence, TipoDivisao, Transaction, TransactionType
+from src.ports.transaction_port import ITransactionRepository
 
 
 class TransactionRepository(ITransactionRepository):
@@ -85,7 +86,7 @@ class TransactionRepository(ITransactionRepository):
             await self.session.rollback()
             raise DatabaseException(f"Erro ao criar transação: {str(e)}", e)
 
-    async def get_by_id(self, transaction_id: int) -> Optional[Transaction]:
+    async def get_by_id(self, transaction_id: int) -> Transaction | None:
         """Busca transação por ID"""
         try:
             stmt = select(TransactionModel).where(TransactionModel.id == transaction_id)
@@ -101,13 +102,13 @@ class TransactionRepository(ITransactionRepository):
 
     def _build_filter_query(
         self,
-        tipo: Optional[str] = None,
-        categoria: Optional[str] = None,
-        local_id: Optional[int] = None,
-        painel_id: Optional[int] = None,
-        descricao: Optional[str] = None,
-        data_inicio: Optional[date] = None,
-        data_fim: Optional[date] = None
+        tipo: str | None = None,
+        categoria: str | None = None,
+        local_id: int | None = None,
+        painel_id: int | None = None,
+        descricao: str | None = None,
+        data_inicio: date | None = None,
+        data_fim: date | None = None
     ):
         """Constrói query base com filtros (reutilizável para list e count)"""
         conditions = []
@@ -133,14 +134,14 @@ class TransactionRepository(ITransactionRepository):
         self,
         limit: int = 10,
         offset: int = 0,
-        tipo: Optional[str] = None,
-        categoria: Optional[str] = None,
-        local_id: Optional[int] = None,
-        painel_id: Optional[int] = None,
-        descricao: Optional[str] = None,
-        data_inicio: Optional[date] = None,
-        data_fim: Optional[date] = None
-    ) -> List[Transaction]:
+        tipo: str | None = None,
+        categoria: str | None = None,
+        local_id: int | None = None,
+        painel_id: int | None = None,
+        descricao: str | None = None,
+        data_inicio: date | None = None,
+        data_fim: date | None = None
+    ) -> list[Transaction]:
         """Lista transações com filtros opcionais"""
         try:
             stmt = select(TransactionModel)
@@ -165,7 +166,7 @@ class TransactionRepository(ITransactionRepository):
         except Exception as e:
             raise DatabaseException(f"Erro ao listar transações: {str(e)}", e)
 
-    async def update(self, transaction_id: int, transaction: Transaction) -> Optional[Transaction]:
+    async def update(self, transaction_id: int, transaction: Transaction) -> Transaction | None:
         """Atualiza uma transação"""
         try:
             stmt = select(TransactionModel).where(TransactionModel.id == transaction_id)
@@ -225,13 +226,13 @@ class TransactionRepository(ITransactionRepository):
 
     async def count(
         self,
-        tipo: Optional[str] = None,
-        categoria: Optional[str] = None,
-        local_id: Optional[int] = None,
-        painel_id: Optional[int] = None,
-        descricao: Optional[str] = None,
-        data_inicio: Optional[date] = None,
-        data_fim: Optional[date] = None
+        tipo: str | None = None,
+        categoria: str | None = None,
+        local_id: int | None = None,
+        painel_id: int | None = None,
+        descricao: str | None = None,
+        data_inicio: date | None = None,
+        data_fim: date | None = None
     ) -> int:
         """Conta total de transações com filtros"""
         try:
@@ -249,7 +250,7 @@ class TransactionRepository(ITransactionRepository):
         except Exception as e:
             raise DatabaseException(f"Erro ao contar transações: {str(e)}", e)
 
-    async def get_installments(self, transaction_mae_id: int) -> List[Transaction]:
+    async def get_installments(self, transaction_mae_id: int) -> list[Transaction]:
         """Busca todas as parcelas de uma transação parcelada"""
         try:
             # Buscar a transação mãe e todas as suas filhas

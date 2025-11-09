@@ -4,7 +4,7 @@ Simula autenticação para desenvolvimento e testes
 Em produção, deve ser substituído por autenticação real (JWT, OAuth2, etc.)
 """
 
-from fastapi import Request, HTTPException
+from fastapi import HTTPException, Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
 

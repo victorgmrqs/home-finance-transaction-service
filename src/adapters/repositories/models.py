@@ -4,8 +4,19 @@ Define os modelos de banco de dados usando SQLAlchemy
 """
 
 from sqlalchemy import (
-    Column, Integer, String, Numeric, Date, DateTime,
-    Text, ForeignKey, CheckConstraint, Index, func, UniqueConstraint, Boolean
+    Boolean,
+    CheckConstraint,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
 )
 from sqlalchemy.orm import declarative_base, relationship
 

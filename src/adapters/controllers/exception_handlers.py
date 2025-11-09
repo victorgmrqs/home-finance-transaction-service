@@ -4,19 +4,19 @@ Define como cada tipo de exceção será tratada e retornada como resposta HTTP
 """
 
 from fastapi import Request, status
+from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError, HTTPException
 from sqlalchemy.exc import IntegrityError
 
 from src.domain.exceptions import (
-    DomainException,
-    ValidationException,
-    TransactionNotFoundException,
-    LocalNotFoundException,
-    InvalidTransactionException,
-    InvalidLocalException,
     DatabaseException,
-    DuplicateCNPJException
+    DomainException,
+    DuplicateCNPJException,
+    InvalidLocalException,
+    InvalidTransactionException,
+    LocalNotFoundException,
+    TransactionNotFoundException,
+    ValidationException,
 )
 from src.shared.responses import error_response
 
@@ -134,7 +134,7 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
             status_code=exc.status_code,
             content=exc.detail
         )
-    
+
     # Caso contrário, retornar o detail diretamente (compatibilidade com testes existentes)
     return JSONResponse(
         status_code=exc.status_code,

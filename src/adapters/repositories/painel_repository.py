@@ -3,13 +3,14 @@ Painel Repository
 Implementação do repositório de painéis usando SQLAlchemy
 """
 
-from typing import Optional, List
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from src.domain.models.painel import Painel
+
 from src.adapters.repositories.models import PainelModel
 from src.domain.exceptions import DatabaseException, DuplicatePainelException
+from src.domain.models.painel import Painel
 
 
 class PainelRepository:
@@ -55,7 +56,7 @@ class PainelRepository:
                 raise DuplicatePainelException(painel.nome, painel.usuario_id)
             raise DatabaseException(f"Erro ao criar painel: {str(e)}", e)
 
-    async def get_by_id(self, painel_id: int) -> Optional[Painel]:
+    async def get_by_id(self, painel_id: int) -> Painel | None:
         """Busca painel por ID"""
         try:
             stmt = select(PainelModel).where(PainelModel.id == painel_id)
@@ -69,7 +70,7 @@ class PainelRepository:
         except Exception as e:
             raise DatabaseException(f"Erro ao buscar painel: {str(e)}", e)
 
-    async def get_by_usuario_and_nome(self, usuario_id: int, nome: str) -> Optional[Painel]:
+    async def get_by_usuario_and_nome(self, usuario_id: int, nome: str) -> Painel | None:
         """Busca painel por usuário e nome"""
         try:
             stmt = select(PainelModel).where(
@@ -91,8 +92,8 @@ class PainelRepository:
         usuario_id: int,
         limit: int = 10,
         offset: int = 0,
-        nome: Optional[str] = None
-    ) -> List[Painel]:
+        nome: str | None = None
+    ) -> list[Painel]:
         """Lista painéis de um usuário com filtros opcionais"""
         try:
             stmt = select(PainelModel).where(PainelModel.usuario_id == usuario_id)
@@ -118,9 +119,9 @@ class PainelRepository:
         self,
         limit: int = 10,
         offset: int = 0,
-        usuario_id: Optional[int] = None,
-        nome: Optional[str] = None
-    ) -> List[Painel]:
+        usuario_id: int | None = None,
+        nome: str | None = None
+    ) -> list[Painel]:
         """Lista painéis com filtros opcionais"""
         try:
             stmt = select(PainelModel)
@@ -144,7 +145,7 @@ class PainelRepository:
         except Exception as e:
             raise DatabaseException(f"Erro ao listar painéis: {str(e)}", e)
 
-    async def update(self, painel_id: int, painel: Painel) -> Optional[Painel]:
+    async def update(self, painel_id: int, painel: Painel) -> Painel | None:
         """Atualiza um painel"""
         try:
             stmt = select(PainelModel).where(PainelModel.id == painel_id)
@@ -158,7 +159,7 @@ class PainelRepository:
             model.nome = painel.nome
             model.descricao = painel.descricao
             model.tipo_conta = painel.tipo_conta
-            model.atualizado_em = datetime.now(timezone.utc)
+            model.atualizado_em = datetime.now(UTC)
 
             await self.session.commit()
             await self.session.refresh(model)
@@ -187,8 +188,8 @@ class PainelRepository:
 
     async def count(
         self,
-        usuario_id: Optional[int] = None,
-        nome: Optional[str] = None
+        usuario_id: int | None = None,
+        nome: str | None = None
     ) -> int:
         """Conta total de painéis com filtros"""
         try:
