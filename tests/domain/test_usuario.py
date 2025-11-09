@@ -3,8 +3,10 @@ Testes de Domínio: Usuario
 Testa as regras de negócio e validações da entidade Usuario
 """
 
-import pytest
 from datetime import datetime
+
+import pytest
+
 from src.domain.models.usuario import Usuario
 
 

@@ -3,7 +3,7 @@ Testes de integração para API de usuários
 """
 
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 from src.main import app
 

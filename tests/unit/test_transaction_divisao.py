@@ -2,10 +2,12 @@
 Testes unitários para validação de divisão de gastos em Transações
 """
 
-import pytest
-from decimal import Decimal
 from datetime import date
-from src.domain.models.transaction import Transaction, TransactionType, TipoDivisao
+from decimal import Decimal
+
+import pytest
+
+from src.domain.models.transaction import TipoDivisao, Transaction, TransactionType
 
 
 def test_transaction_gasto_pessoal():

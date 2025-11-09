@@ -2,10 +2,9 @@
 Testes de integração para API de transações
 """
 
+
 import pytest
-from httpx import AsyncClient, ASGITransport
-from decimal import Decimal
-from datetime import date
+from httpx import ASGITransport, AsyncClient
 
 from src.main import app
 
@@ -24,7 +23,7 @@ def setup_test_data():
                 "email": "teste@example.com"
             })
             usuario_id = usuario_response.json()["data"]["id"]
-            
+
             # Criar painel
             painel_response = await client.post("/api/v1/paineis", json={
                 "nome": "Painel Teste",
@@ -33,9 +32,9 @@ def setup_test_data():
                 "usuario_id": usuario_id
             })
             painel_id = painel_response.json()["data"]["id"]
-            
+
             return {"usuario_id": usuario_id, "painel_id": painel_id}
-    
+
     return _setup
 
 
@@ -43,7 +42,7 @@ def setup_test_data():
 async def test_create_transaction(setup_test_data):
     """Testa criação de transação via API"""
     test_data = await setup_test_data()
-    
+
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test"
@@ -70,7 +69,7 @@ async def test_create_transaction(setup_test_data):
 async def test_list_transactions(setup_test_data):
     """Testa listagem de transações"""
     test_data = await setup_test_data()
-    
+
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test"
@@ -99,7 +98,7 @@ async def test_list_transactions(setup_test_data):
 async def test_get_transaction(setup_test_data):
     """Testa busca de transação por ID"""
     test_data = await setup_test_data()
-    
+
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test"
@@ -128,7 +127,7 @@ async def test_get_transaction(setup_test_data):
 async def test_update_transaction(setup_test_data):
     """Testa atualização de transação"""
     test_data = await setup_test_data()
-    
+
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test"
@@ -159,7 +158,7 @@ async def test_update_transaction(setup_test_data):
 async def test_delete_transaction(setup_test_data):
     """Testa remoção de transação"""
     test_data = await setup_test_data()
-    
+
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test"
@@ -191,7 +190,7 @@ async def test_delete_transaction(setup_test_data):
 async def test_create_transaction_invalid_data(setup_test_data):
     """Testa criação com dados inválidos"""
     test_data = await setup_test_data()
-    
+
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test"
@@ -231,7 +230,7 @@ async def test_create_transaction_without_painel_id():
 async def test_list_transactions_with_painel_filter(setup_test_data):
     """Testa listagem de transações com filtro por painel"""
     test_data = await setup_test_data()
-    
+
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test"

@@ -3,12 +3,14 @@ Testes de Serviço: PainelService
 Testa a lógica de negócio da camada de aplicação para painéis
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime
+from unittest.mock import AsyncMock
+
+import pytest
+
 from src.application.painel_service import PainelService
+from src.domain.exceptions import DatabaseException
 from src.domain.models.painel import Painel
-from src.domain.exceptions import PainelNotFoundException, InvalidPainelException, DatabaseException
 
 
 class TestPainelService:

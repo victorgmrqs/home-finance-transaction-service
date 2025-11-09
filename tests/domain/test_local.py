@@ -3,6 +3,7 @@ Testes para a entidade de domínio Local
 """
 
 import pytest
+
 from src.domain.models.local import Local
 
 

@@ -3,8 +3,10 @@ Testes de Domínio: Painel
 Testa as regras de negócio e validações da entidade Painel
 """
 
-import pytest
 from datetime import datetime
+
+import pytest
+
 from src.domain.models.painel import Painel
 
 

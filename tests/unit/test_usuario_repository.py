@@ -3,14 +3,16 @@ Testes de Repositório: UsuarioRepository
 Testa as operações de banco de dados para usuários
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.adapters.repositories.usuario_repository import UsuarioRepository
+
 from src.adapters.repositories.models import UsuarioModel
-from src.domain.models.usuario import Usuario
+from src.adapters.repositories.usuario_repository import UsuarioRepository
 from src.domain.exceptions import DatabaseException
+from src.domain.models.usuario import Usuario
 
 
 class TestUsuarioRepository:

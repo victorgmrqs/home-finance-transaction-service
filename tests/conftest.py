@@ -2,12 +2,13 @@
 Configuracao de fixtures do pytest para testes
 """
 
+import os
+
 import pytest
 import pytest_asyncio
-import os
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from src.adapters.repositories.models import Base
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from src.adapters.repositories.models import Base
 
 # Configurar banco de testes
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
@@ -23,8 +24,8 @@ def anyio_backend():
 @pytest.fixture(scope="function", autouse=True)
 async def clean_database():
     """Limpa o banco de dados antes de cada teste de integracao"""
-    from src.db.session import engine
     from src.adapters.repositories.models import Base
+    from src.db.session import engine
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)

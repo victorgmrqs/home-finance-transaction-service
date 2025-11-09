@@ -3,7 +3,7 @@ Testes de integração para API de painéis
 """
 
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 from src.main import app
 
@@ -22,7 +22,7 @@ def setup_usuario():
             })
             usuario_id = response.json()["data"]["id"]
             return usuario_id
-    
+
     return _setup
 
 
@@ -30,7 +30,7 @@ def setup_usuario():
 async def test_create_painel(setup_usuario):
     """Testa criação de painel via API"""
     usuario_id = await setup_usuario()
-    
+
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test"
@@ -57,7 +57,7 @@ async def test_create_painel(setup_usuario):
 async def test_create_painel_sem_descricao(setup_usuario):
     """Testa criação de painel sem descrição"""
     usuario_id = await setup_usuario()
-    
+
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test"
@@ -81,7 +81,7 @@ async def test_create_painel_sem_descricao(setup_usuario):
 async def test_list_paineis(setup_usuario):
     """Testa listagem de painéis"""
     usuario_id = await setup_usuario()
-    
+
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test"
@@ -114,7 +114,7 @@ async def test_list_paineis(setup_usuario):
 async def test_get_painel(setup_usuario):
     """Testa busca de painel por ID"""
     usuario_id = await setup_usuario()
-    
+
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test"
@@ -157,7 +157,7 @@ async def test_get_painel_not_found():
 async def test_update_painel(setup_usuario):
     """Testa atualização de painel"""
     usuario_id = await setup_usuario()
-    
+
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test"
@@ -188,7 +188,7 @@ async def test_update_painel(setup_usuario):
 async def test_delete_painel(setup_usuario):
     """Testa remoção de painel"""
     usuario_id = await setup_usuario()
-    
+
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test"
@@ -218,7 +218,7 @@ async def test_delete_painel(setup_usuario):
 async def test_create_painel_invalid_data(setup_usuario):
     """Testa criação com dados inválidos"""
     usuario_id = await setup_usuario()
-    
+
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test"
@@ -248,7 +248,7 @@ async def test_create_painel_invalid_data(setup_usuario):
 async def test_list_paineis_by_usuario(setup_usuario):
     """Testa listagem de painéis por usuário"""
     usuario_id = await setup_usuario()
-    
+
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test"
@@ -284,7 +284,7 @@ async def test_list_paineis_by_usuario(setup_usuario):
 async def test_list_paineis_with_filters(setup_usuario):
     """Testa listagem de painéis com filtros"""
     usuario_id = await setup_usuario()
-    
+
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test"
@@ -319,7 +319,7 @@ async def test_list_paineis_with_filters(setup_usuario):
 async def test_create_painel_duplicate_name(setup_usuario):
     """Testa criação de painel com nome duplicado para o mesmo usuário"""
     usuario_id = await setup_usuario()
-    
+
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test"
