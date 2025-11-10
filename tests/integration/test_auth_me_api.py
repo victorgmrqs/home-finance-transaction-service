@@ -202,3 +202,43 @@ async def test_auth_me_response_structure():
         assert isinstance(session["valid"], bool)
         assert isinstance(session["expires_at"], str)
         assert isinstance(session["issued_at"], str)
+
+
+@pytest.mark.asyncio
+async def test_auth_me_with_expired_token():
+    """Testa GET /auth/me com token expirado"""
+    import jwt
+    from datetime import datetime, timedelta, UTC
+    from src.core.config import settings
+
+    # Gerar um token JWT expirado
+    expired_payload = {
+        "sub": "999",
+        "email": "expired@example.com",
+        "nome": "Expired User",
+        "exp": int((datetime.now(UTC) - timedelta(hours=1)).timestamp()),  # Expirado há 1 hora
+        "iat": int((datetime.now(UTC) - timedelta(hours=2)).timestamp())
+    }
+    expired_token = jwt.encode(
+        expired_payload,
+        settings.secret_key,
+        algorithm="HS256"
+    )
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test"
+    ) as client:
+        cookies = {settings.cookie_name: expired_token}
+        response = await client.get("/api/v1/auth/me", cookies=cookies)
+        
+        assert response.status_code == 401
+        data = response.json()
+        
+        # Verifica que a mensagem indica token inválido/expirado
+        if "detail" in data:
+            assert data["detail"]["code"] == "INVALID_SESSION"
+            assert "inválida" in data["detail"]["message"].lower() or "expirada" in data["detail"]["message"].lower()
+        else:
+            assert data["code"] == "INVALID_SESSION"
+            assert "inválida" in data["message"].lower() or "expirada" in data["message"].lower()

@@ -128,3 +128,153 @@ async def test_get_session_info_without_sub_in_token(auth_service):
 
     # Assert
     assert result is None
+
+
+@pytest.mark.asyncio
+async def test_get_session_info_with_missing_exp_field(auth_service, mock_repository):
+    """Testa recuperação de sessão quando token não tem campo 'exp'"""
+    # Arrange
+    usuario = Usuario(
+        id=1,
+        nome="Test User",
+        email="test@example.com",
+        password_hash="hash123",
+        criado_em=datetime(2025, 1, 1, 0, 0, 0, tzinfo=UTC)
+    )
+    mock_repository.get_by_id.return_value = usuario
+
+    # Criar token sem campo 'exp'
+    import jwt as pyjwt
+    from src.core.config import settings
+
+    payload = {
+        "sub": "1",
+        "email": "test@example.com",
+        "iat": int(datetime.now(UTC).timestamp())
+    }
+    token = pyjwt.encode(payload, settings.secret_key, algorithm="HS256")
+
+    # Act
+    result = await auth_service.get_session_info(token)
+
+    # Assert
+    # O token é válido, mas o campo expires_at deve ser None
+    assert result is not None
+    assert result["user"]["id"] == 1
+    assert result["session"]["valid"] is True
+    assert result["session"]["expires_at"] is None
+    assert result["session"]["issued_at"] is not None
+
+
+@pytest.mark.asyncio
+async def test_get_session_info_with_missing_iat_field(auth_service, mock_repository):
+    """Testa recuperação de sessão quando token não tem campo 'iat'"""
+    # Arrange
+    usuario = Usuario(
+        id=1,
+        nome="Test User",
+        email="test@example.com",
+        password_hash="hash123",
+        criado_em=datetime(2025, 1, 1, 0, 0, 0, tzinfo=UTC)
+    )
+    mock_repository.get_by_id.return_value = usuario
+
+    # Criar token sem campo 'iat'
+    import jwt as pyjwt
+    from datetime import timedelta
+    from src.core.config import settings
+
+    now = datetime.now(UTC)
+    payload = {
+        "sub": "1",
+        "email": "test@example.com",
+        "exp": int((now + timedelta(hours=1)).timestamp())
+    }
+    token = pyjwt.encode(payload, settings.secret_key, algorithm="HS256")
+
+    # Act
+    result = await auth_service.get_session_info(token)
+
+    # Assert
+    # O token é válido, mas o campo issued_at deve ser None
+    assert result is not None
+    assert result["user"]["id"] == 1
+    assert result["session"]["valid"] is True
+    assert result["session"]["expires_at"] is not None
+    assert result["session"]["issued_at"] is None
+
+
+@pytest.mark.asyncio
+async def test_get_session_info_with_malformed_exp_field(auth_service, mock_repository):
+    """Testa recuperação de sessão quando token tem campo 'exp' malformado"""
+    # Arrange
+    usuario = Usuario(
+        id=1,
+        nome="Test User",
+        email="test@example.com",
+        password_hash="hash123",
+        criado_em=datetime(2025, 1, 1, 0, 0, 0, tzinfo=UTC)
+    )
+    mock_repository.get_by_id.return_value = usuario
+
+    # Criar token com 'exp' malformado (string ao invés de número)
+    import jwt as pyjwt
+    from src.core.config import settings
+
+    payload = {
+        "sub": "1",
+        "email": "test@example.com",
+        "exp": "not_a_timestamp",
+        "iat": int(datetime.now(UTC).timestamp())
+    }
+    token = pyjwt.encode(payload, settings.secret_key, algorithm="HS256")
+
+    # Act
+    result = await auth_service.get_session_info(token)
+
+    # Assert
+    # O token é válido, mas o campo expires_at deve ser None devido ao valor malformado
+    assert result is not None
+    assert result["user"]["id"] == 1
+    assert result["session"]["valid"] is True
+    assert result["session"]["expires_at"] is None
+    assert result["session"]["issued_at"] is not None
+
+
+@pytest.mark.asyncio
+async def test_get_session_info_with_malformed_iat_field(auth_service, mock_repository):
+    """Testa recuperação de sessão quando token tem campo 'iat' malformado"""
+    # Arrange
+    usuario = Usuario(
+        id=1,
+        nome="Test User",
+        email="test@example.com",
+        password_hash="hash123",
+        criado_em=datetime(2025, 1, 1, 0, 0, 0, tzinfo=UTC)
+    )
+    mock_repository.get_by_id.return_value = usuario
+
+    # Criar token com 'iat' malformado (string ao invés de número)
+    import jwt as pyjwt
+    from datetime import timedelta
+    from src.core.config import settings
+
+    now = datetime.now(UTC)
+    payload = {
+        "sub": "1",
+        "email": "test@example.com",
+        "exp": int((now + timedelta(hours=1)).timestamp()),
+        "iat": "not_a_timestamp"
+    }
+    token = pyjwt.encode(payload, settings.secret_key, algorithm="HS256")
+
+    # Act
+    result = await auth_service.get_session_info(token)
+
+    # Assert
+    # O token é válido, mas o campo issued_at deve ser None devido ao valor malformado
+    assert result is not None
+    assert result["user"]["id"] == 1
+    assert result["session"]["valid"] is True
+    assert result["session"]["expires_at"] is not None
+    assert result["session"]["issued_at"] is None
