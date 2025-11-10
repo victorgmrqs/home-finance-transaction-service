@@ -88,7 +88,11 @@ async def test_get_usuario():
             "nome": "Usuário Teste",
             "email": "teste@example.com"
         })
-        created_id = create_response.json()["data"]["id"]
+        assert create_response.status_code == 201, f"Erro ao criar usuário: {create_response.text}"
+        create_data = create_response.json()
+        assert create_data is not None, "Resposta não contém JSON válido"
+        assert "data" in create_data, f"Resposta não contém 'data': {create_data}"
+        created_id = create_data["data"]["id"]
 
         # Buscar
         response = await client.get(f"/api/v1/usuarios/{created_id}")
@@ -127,7 +131,11 @@ async def test_update_usuario():
             "nome": "Nome Original",
             "email": "original@example.com"
         })
-        created_id = create_response.json()["data"]["id"]
+        assert create_response.status_code == 201, f"Erro ao criar usuário: {create_response.text}"
+        create_data = create_response.json()
+        assert create_data is not None, "Resposta não contém JSON válido"
+        assert "data" in create_data, f"Resposta não contém 'data': {create_data}"
+        created_id = create_data["data"]["id"]
 
         # Atualizar
         response = await client.put(f"/api/v1/usuarios/{created_id}", json={
@@ -154,7 +162,11 @@ async def test_delete_usuario():
             "nome": "Usuário Para Deletar",
             "email": "deletar@example.com"
         })
-        created_id = create_response.json()["data"]["id"]
+        assert create_response.status_code == 201, f"Erro ao criar usuário: {create_response.text}"
+        create_data = create_response.json()
+        assert create_data is not None, "Resposta não contém JSON válido"
+        assert "data" in create_data, f"Resposta não contém 'data': {create_data}"
+        created_id = create_data["data"]["id"]
 
         # Deletar
         response = await client.delete(f"/api/v1/usuarios/{created_id}")

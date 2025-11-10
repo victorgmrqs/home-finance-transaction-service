@@ -123,7 +123,11 @@ async def test_delete_local():
         create_response = await client.post("/api/v1/locais", json={
             "nome_fantasia": "Para deletar"
         })
-        created_id = create_response.json()["data"]["id"]
+        assert create_response.status_code == 201, f"Erro ao criar local: {create_response.text}"
+        create_data = create_response.json()
+        assert create_data is not None, "Resposta não contém JSON válido"
+        assert "data" in create_data, f"Resposta não contém 'data': {create_data}"
+        created_id = create_data["data"]["id"]
 
         # Deletar
         response = await client.delete(f"/api/v1/locais/{created_id}")
