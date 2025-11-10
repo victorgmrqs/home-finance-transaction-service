@@ -18,6 +18,10 @@ from src.core.schemas_api import (
     BaseResponse,
     LoginRequest,
     RegisterRequest,
+    SessionInfo,
+    SessionRecoveryData,
+    SessionRecoveryResponse,
+    UserSessionData,
 )
 from src.db.session import get_session
 from src.domain.exceptions import (
@@ -241,6 +245,82 @@ async def logout(response: Response):
         code="LOGOUT_SUCCESS",
         message="Logout realizado com sucesso",
         data=None
+    )
+
+
+@router.get(
+    "/auth/me",
+    response_model=SessionRecoveryResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Recuperar sessão do usuário",
+    description="Recupera informações completas da sessão atual (via cookie ou header)"
+)
+@limiter.limit("10/minute")
+async def get_current_session(
+    request: Request,
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    """
+    Recupera informações da sessão do usuário autenticado
+
+    **Casos de uso:**
+    - Frontend pode recuperar sessão após corrupção do UserContext
+    - Validação de integridade dos dados do token
+    - Verificação de expiração da sessão
+
+    **Token pode vir de:**
+    - Cookie HttpOnly (preferência)
+    - Header Authorization: Bearer {token} (fallback)
+
+    **Validações:**
+    - Token válido e não expirado
+    - Usuário ainda existe no banco
+    - Dados do token correspondem aos dados do banco
+
+    **Retorna:**
+    - 200 OK: Dados do usuário + informações da sessão
+    - 401 Unauthorized: Token inválido/expirado ou usuário não encontrado
+
+    **Rate Limiting:**
+    - 10 requisições por minuto por IP
+    """
+    # Tentar ler do cookie primeiro
+    token = request.cookies.get(settings.cookie_name)
+
+    # Fallback para header Authorization
+    if not token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.replace("Bearer ", "")
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "code": "MISSING_TOKEN",
+                "message": "Token de autenticação não fornecido"
+            }
+        )
+
+    # Obter informações da sessão com validação de integridade
+    session_info = await auth_service.get_session_info(token)
+
+    if not session_info:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "code": "INVALID_SESSION",
+                "message": "Sessão inválida, expirada ou usuário não encontrado"
+            }
+        )
+
+    return SessionRecoveryResponse(
+        code="SESSION_VALID",
+        message="Sessão recuperada com sucesso",
+        data=SessionRecoveryData(
+            user=UserSessionData(**session_info["user"]),
+            session=SessionInfo(**session_info["session"])
+        )
     )
 
 
