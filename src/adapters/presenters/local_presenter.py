@@ -25,8 +25,8 @@ def present_local(local: Local) -> dict:
         "razao_social": local.razao_social,
         "categoria": local.categoria,
         "endereco": local.endereco,
-        "criado_em": local.criado_em.isoformat(),
-        "atualizado_em": local.atualizado_em.isoformat()
+        "criado_em": local.criado_em.isoformat() if local.criado_em else None,
+        "atualizado_em": local.atualizado_em.isoformat() if local.atualizado_em else None
     }
 
 

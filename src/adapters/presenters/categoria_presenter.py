@@ -16,6 +16,8 @@ from src.domain.models.categoria import Categoria
 
 def present_categoria_response(categoria: Categoria) -> CategoriaResponse:
     """Converte entidade de domínio para schema de resposta"""
+    if categoria.id is None:
+        raise ValueError("Categoria deve ter ID para apresentação")
     return CategoriaResponse(
         id=categoria.id,
         nome=categoria.nome,

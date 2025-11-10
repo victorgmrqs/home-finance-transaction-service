@@ -22,13 +22,13 @@ class PainelRepository:
     def _to_domain(self, model: PainelModel) -> Painel:
         """Converte model do SQLAlchemy para entidade de domínio"""
         return Painel(
-            id=model.id,
-            nome=model.nome,
-            descricao=model.descricao,
-            tipo_conta=model.tipo_conta,
-            usuario_id=model.usuario_id,
-            criado_em=model.criado_em,
-            atualizado_em=model.atualizado_em
+            id=model.id,  # type: ignore[arg-type]
+            nome=model.nome,  # type: ignore[arg-type]
+            descricao=model.descricao,  # type: ignore[arg-type]
+            tipo_conta=model.tipo_conta,  # type: ignore[arg-type]
+            usuario_id=model.usuario_id,  # type: ignore[arg-type]
+            criado_em=model.criado_em,  # type: ignore[arg-type]
+            atualizado_em=model.atualizado_em  # type: ignore[arg-type]
         )
 
     def _to_model(self, painel: Painel) -> PainelModel:
@@ -156,10 +156,10 @@ class PainelRepository:
                 return None
 
             # Atualizar campos
-            model.nome = painel.nome
-            model.descricao = painel.descricao
-            model.tipo_conta = painel.tipo_conta
-            model.atualizado_em = datetime.now(UTC)
+            model.nome = painel.nome  # type: ignore[assignment]
+            model.descricao = painel.descricao  # type: ignore[assignment]
+            model.tipo_conta = painel.tipo_conta  # type: ignore[assignment]
+            model.atualizado_em = datetime.now(UTC)  # type: ignore[assignment]
 
             await self.session.commit()
             await self.session.refresh(model)

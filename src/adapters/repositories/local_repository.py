@@ -23,14 +23,14 @@ class LocalRepository(ILocalRepository):
     def _to_domain(self, model: LocalModel) -> Local:
         """Converte model do SQLAlchemy para entidade de domínio"""
         return Local(
-            id=model.id,
-            nome_fantasia=model.nome_fantasia,
-            cnpj=model.cnpj,
-            razao_social=model.razao_social,
-            categoria=model.categoria,
-            endereco=model.endereco,
-            criado_em=model.criado_em,
-            atualizado_em=model.atualizado_em
+            id=model.id,  # type: ignore[arg-type]
+            nome_fantasia=model.nome_fantasia,  # type: ignore[arg-type]
+            cnpj=model.cnpj,  # type: ignore[arg-type]
+            razao_social=model.razao_social,  # type: ignore[arg-type]
+            categoria=model.categoria,  # type: ignore[arg-type]
+            endereco=model.endereco,  # type: ignore[arg-type]
+            criado_em=model.criado_em,  # type: ignore[arg-type]
+            atualizado_em=model.atualizado_em  # type: ignore[arg-type]
         )
 
     def _to_model(self, local: Local) -> LocalModel:
@@ -124,12 +124,12 @@ class LocalRepository(ILocalRepository):
                     raise DuplicateCNPJException(local.cnpj)
 
             # Atualizar campos
-            model.nome_fantasia = local.nome_fantasia
-            model.cnpj = local.cnpj
-            model.razao_social = local.razao_social
-            model.categoria = local.categoria
-            model.endereco = local.endereco
-            model.atualizado_em = datetime.now(UTC)
+            model.nome_fantasia = local.nome_fantasia  # type: ignore[assignment]
+            model.cnpj = local.cnpj  # type: ignore[assignment]
+            model.razao_social = local.razao_social  # type: ignore[assignment]
+            model.categoria = local.categoria  # type: ignore[assignment]
+            model.endereco = local.endereco  # type: ignore[assignment]
+            model.atualizado_em = datetime.now(UTC)  # type: ignore[assignment]
 
             await self.session.commit()
             await self.session.refresh(model)

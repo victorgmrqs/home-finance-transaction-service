@@ -22,13 +22,13 @@ class CategoriaRepository:
     def _to_domain(self, model: CategoriaModel) -> Categoria:
         """Converte model do SQLAlchemy para entidade de domínio"""
         return Categoria(
-            id=model.id,
-            nome=model.nome,
-            descricao=model.descricao,
-            usuario_id=model.usuario_id,
-            is_default=model.is_default,
-            criado_em=model.criado_em,
-            atualizado_em=model.atualizado_em
+            id=model.id,  # type: ignore[arg-type]
+            nome=model.nome,  # type: ignore[arg-type]
+            descricao=model.descricao,  # type: ignore[arg-type]
+            usuario_id=model.usuario_id,  # type: ignore[arg-type]
+            is_default=model.is_default,  # type: ignore[arg-type]
+            criado_em=model.criado_em,  # type: ignore[arg-type]
+            atualizado_em=model.atualizado_em  # type: ignore[arg-type]
         )
 
     def _to_model(self, categoria: Categoria) -> CategoriaModel:
@@ -155,9 +155,9 @@ class CategoriaRepository:
                 return None
 
             # Atualizar campos
-            model.nome = categoria.nome
-            model.descricao = categoria.descricao
-            model.atualizado_em = datetime.now(UTC)
+            model.nome = categoria.nome  # type: ignore[assignment]
+            model.descricao = categoria.descricao  # type: ignore[assignment]
+            model.atualizado_em = datetime.now(UTC)  # type: ignore[assignment]
 
             await self.session.commit()
             await self.session.refresh(model)

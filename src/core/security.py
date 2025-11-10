@@ -132,7 +132,7 @@ class JWTManager:
         )
 
     @staticmethod
-    def decode_access_token(token: str) -> dict | None:
+    def decode_access_token(token: str) -> dict[str, object] | None:
         """
         Decodifica e valida um token JWT
 
@@ -143,11 +143,12 @@ class JWTManager:
             Dados decodificados do token ou None se inválido
         """
         try:
-            return jwt.decode(
+            decoded = jwt.decode(
                 token,
                 settings.secret_key,
                 algorithms=["HS256"]
             )
+            return dict(decoded)
         except jwt.ExpiredSignatureError:
             # Token expirado
             return None

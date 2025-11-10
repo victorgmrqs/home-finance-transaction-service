@@ -7,7 +7,7 @@ Orquestra a lógica de negócio relacionada a transações
 from datetime import date
 from decimal import Decimal
 
-from dateutil.relativedelta import relativedelta
+from dateutil.relativedelta import relativedelta  # type: ignore[import-untyped]
 
 from src.domain.exceptions import TransactionNotFoundException
 from src.domain.models.transaction import Transaction
@@ -185,6 +185,8 @@ class TransactionService:
             Transaction: Primeira parcela criada (transação "mãe")
         """
         parcelas = transaction.parcelas
+        if parcelas is None:
+            raise ValueError("Transação deve ter número de parcelas definido")
         valor_total = transaction.valor
         data_base = transaction.data
 
@@ -194,7 +196,7 @@ class TransactionService:
         # Ajustar primeira parcela para compensar arredondamento
         valor_primeira_parcela = valor_total - (valor_parcela * (parcelas - 1))
 
-        transacoes_criadas = []
+        transacoes_criadas: list[Transaction] = []
 
         # Criar todas as parcelas
         for i in range(1, parcelas + 1):
@@ -265,6 +267,8 @@ class TransactionService:
             return [transaction]
 
         # Encontrar a transação mãe
+        if transaction.id is None:
+            raise ValueError("Transação deve ter ID para buscar parcelas")
         mae_id = transaction.transacao_mae_id if transaction.transacao_mae_id else transaction.id
 
         # Buscar todas as parcelas (incluindo a mãe)

@@ -23,29 +23,29 @@ class TransactionRepository(ITransactionRepository):
     def _to_domain(self, model: TransactionModel) -> Transaction:
         """Converte model do SQLAlchemy para entidade de domínio"""
         return Transaction(
-            id=model.id,
-            data=model.data,
-            descricao=model.descricao,
-            valor=model.valor,
-            tipo=TransactionType(model.tipo),
-            categoria=model.categoria,
-            recorrencia=Recurrence(model.recorrencia) if model.recorrencia else None,
-            parcelas=model.parcelas,
-            tipo_divisao=TipoDivisao(model.tipo_divisao) if model.tipo_divisao else TipoDivisao.PESSOAL,
-            valor_por_pessoa=model.valor_por_pessoa,
-            porcentagem_divisao=model.porcentagem_divisao,
-            local_id=model.local_id,
-            painel_id=model.painel_id,
+            id=model.id,  # type: ignore[arg-type]
+            data=model.data,  # type: ignore[arg-type]
+            descricao=model.descricao,  # type: ignore[arg-type]
+            valor=model.valor,  # type: ignore[arg-type]
+            tipo=TransactionType(model.tipo),  # type: ignore[arg-type]
+            categoria=model.categoria,  # type: ignore[arg-type]
+            recorrencia=Recurrence(model.recorrencia) if model.recorrencia else None,  # type: ignore[arg-type]
+            parcelas=model.parcelas,  # type: ignore[arg-type]
+            tipo_divisao=TipoDivisao(model.tipo_divisao) if model.tipo_divisao else TipoDivisao.PESSOAL,  # type: ignore[arg-type]
+            valor_por_pessoa=model.valor_por_pessoa,  # type: ignore[arg-type]
+            porcentagem_divisao=model.porcentagem_divisao,  # type: ignore[arg-type]
+            local_id=model.local_id,  # type: ignore[arg-type]
+            painel_id=model.painel_id,  # type: ignore[arg-type]
             # Campos de parcelamento
-            parcela_numero=model.parcela_numero,
-            transacao_mae_id=model.transacao_mae_id,
-            eh_parcela=model.eh_parcela,
+            parcela_numero=model.parcela_numero,  # type: ignore[arg-type]
+            transacao_mae_id=model.transacao_mae_id,  # type: ignore[arg-type]
+            eh_parcela=model.eh_parcela,  # type: ignore[arg-type]
             # Campos de recorrência
-            transacao_recorrente_origem_id=model.transacao_recorrente_origem_id,
-            recorrencia_ativa=model.recorrencia_ativa,
-            proxima_geracao=model.proxima_geracao,
-            criado_em=model.criado_em,
-            atualizado_em=model.atualizado_em
+            transacao_recorrente_origem_id=model.transacao_recorrente_origem_id,  # type: ignore[arg-type]
+            recorrencia_ativa=model.recorrencia_ativa,  # type: ignore[arg-type]
+            proxima_geracao=model.proxima_geracao,  # type: ignore[arg-type]
+            criado_em=model.criado_em,  # type: ignore[arg-type]
+            atualizado_em=model.atualizado_em  # type: ignore[arg-type]
         )
 
     def _to_model(self, transaction: Transaction) -> TransactionModel:
@@ -177,27 +177,27 @@ class TransactionRepository(ITransactionRepository):
                 return None
 
             # Atualizar campos
-            model.data = transaction.data
-            model.descricao = transaction.descricao
-            model.valor = transaction.valor
-            model.tipo = transaction.tipo.value
-            model.categoria = transaction.categoria
-            model.recorrencia = transaction.recorrencia.value if transaction.recorrencia else None
-            model.parcelas = transaction.parcelas
-            model.tipo_divisao = transaction.tipo_divisao.value if transaction.tipo_divisao else "PESSOAL"
-            model.valor_por_pessoa = transaction.valor_por_pessoa
-            model.porcentagem_divisao = transaction.porcentagem_divisao
-            model.local_id = transaction.local_id
-            model.painel_id = transaction.painel_id
+            model.data = transaction.data  # type: ignore[assignment]
+            model.descricao = transaction.descricao  # type: ignore[assignment]
+            model.valor = transaction.valor  # type: ignore[assignment]
+            model.tipo = transaction.tipo.value  # type: ignore[assignment]
+            model.categoria = transaction.categoria  # type: ignore[assignment]
+            model.recorrencia = transaction.recorrencia.value if transaction.recorrencia else None  # type: ignore[assignment]
+            model.parcelas = transaction.parcelas  # type: ignore[assignment]
+            model.tipo_divisao = transaction.tipo_divisao.value if transaction.tipo_divisao else "PESSOAL"  # type: ignore[assignment]
+            model.valor_por_pessoa = transaction.valor_por_pessoa  # type: ignore[assignment]
+            model.porcentagem_divisao = transaction.porcentagem_divisao  # type: ignore[assignment]
+            model.local_id = transaction.local_id  # type: ignore[assignment]
+            model.painel_id = transaction.painel_id  # type: ignore[assignment]
             # Campos de parcelamento
-            model.parcela_numero = transaction.parcela_numero
-            model.transacao_mae_id = transaction.transacao_mae_id
-            model.eh_parcela = transaction.eh_parcela
+            model.parcela_numero = transaction.parcela_numero  # type: ignore[assignment]
+            model.transacao_mae_id = transaction.transacao_mae_id  # type: ignore[assignment]
+            model.eh_parcela = transaction.eh_parcela  # type: ignore[assignment]
             # Campos de recorrência
-            model.transacao_recorrente_origem_id = transaction.transacao_recorrente_origem_id
-            model.recorrencia_ativa = transaction.recorrencia_ativa
-            model.proxima_geracao = transaction.proxima_geracao
-            model.atualizado_em = datetime.now()  # Sem timezone para compatibilidade com TIMESTAMP WITHOUT TIME ZONE
+            model.transacao_recorrente_origem_id = transaction.transacao_recorrente_origem_id  # type: ignore[assignment]
+            model.recorrencia_ativa = transaction.recorrencia_ativa  # type: ignore[assignment]
+            model.proxima_geracao = transaction.proxima_geracao  # type: ignore[assignment]
+            model.atualizado_em = datetime.now()  # type: ignore[assignment]  # Sem timezone para compatibilidade com TIMESTAMP WITHOUT TIME ZONE
 
             await self.session.commit()
             await self.session.refresh(model)

@@ -82,7 +82,7 @@ app.add_middleware(MockAuthMiddleware, environment=settings.environment)
 # Configurar rate limiting global
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
 # Registrar exception handlers
 register_exception_handlers(app)

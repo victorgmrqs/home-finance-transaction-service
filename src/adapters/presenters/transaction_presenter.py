@@ -32,8 +32,8 @@ def present_transaction(transaction: Transaction) -> dict:
         "porcentagem_divisao": transaction.porcentagem_divisao,
         "local_id": transaction.local_id,
         "painel_id": transaction.painel_id,
-        "criado_em": transaction.criado_em.isoformat(),
-        "atualizado_em": transaction.atualizado_em.isoformat()
+        "criado_em": transaction.criado_em.isoformat() if transaction.criado_em else None,
+        "atualizado_em": transaction.atualizado_em.isoformat() if transaction.atualizado_em else None
     }
 
 

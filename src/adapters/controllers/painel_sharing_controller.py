@@ -159,7 +159,7 @@ async def atualizar_compartilhamento(
             }
         )
 
-    compartilhamento.tipo_permissao = update.tipo_permissao
+    compartilhamento.tipo_permissao = update.tipo_permissao  # type: ignore[assignment]
     await session.commit()
     await session.refresh(compartilhamento)
 

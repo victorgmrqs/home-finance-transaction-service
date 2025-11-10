@@ -94,7 +94,13 @@ def get_current_user_id(request: Request) -> int:
             detail="Usuário não autenticado"
         )
 
-    return request.state.usuario_id
+    usuario_id = getattr(request.state, "usuario_id", None)
+    if usuario_id is None or not isinstance(usuario_id, int):
+        raise HTTPException(
+            status_code=401,
+            detail="Usuário não autenticado"
+        )
+    return int(usuario_id)
 
 
 def check_painel_permission(

@@ -22,12 +22,12 @@ class UsuarioRepository:
     def _to_domain(self, model: UsuarioModel) -> Usuario:
         """Converte model do SQLAlchemy para entidade de domínio"""
         return Usuario(
-            id=model.id,
-            nome=model.nome,
-            email=model.email,
-            password_hash=model.password_hash,
-            criado_em=model.criado_em,
-            atualizado_em=model.atualizado_em
+            id=model.id,  # type: ignore[arg-type]
+            nome=model.nome,  # type: ignore[arg-type]
+            email=model.email,  # type: ignore[arg-type]
+            password_hash=model.password_hash,  # type: ignore[arg-type]
+            criado_em=model.criado_em,  # type: ignore[arg-type]
+            atualizado_em=model.atualizado_em  # type: ignore[arg-type]
         )
 
     def _to_model(self, usuario: Usuario) -> UsuarioModel:
@@ -117,11 +117,11 @@ class UsuarioRepository:
                 return None
 
             # Atualizar campos
-            model.nome = usuario.nome
-            model.email = usuario.email
+            model.nome = usuario.nome  # type: ignore[assignment]
+            model.email = usuario.email  # type: ignore[assignment]
             if usuario.password_hash:
-                model.password_hash = usuario.password_hash
-            model.atualizado_em = datetime.now(UTC)
+                model.password_hash = usuario.password_hash  # type: ignore[assignment]
+            model.atualizado_em = datetime.now(UTC)  # type: ignore[assignment]
 
             await self.session.commit()
             await self.session.refresh(model)

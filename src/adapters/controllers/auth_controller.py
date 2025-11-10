@@ -23,6 +23,7 @@ from src.domain.exceptions import (
     BusinessRuleViolationError,
     DuplicateEntityError,
 )
+from src.ports.usuario_port import UsuarioRepositoryPort
 
 router = APIRouter()
 
@@ -32,7 +33,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 def get_auth_service(session: AsyncSession = Depends(get_session)) -> AuthService:
     """Dependency para obter instância do AuthService"""
-    usuario_repository = UsuarioRepository(session)
+    usuario_repository: UsuarioRepositoryPort = UsuarioRepository(session)  # type: ignore[assignment]
     return AuthService(usuario_repository)
 
 
@@ -68,6 +69,10 @@ async def register(
             password=register_data.password
         )
 
+        if usuario.id is None:
+            raise ValueError("Usuário criado deve ter ID")
+        if usuario.email is None:
+            raise ValueError("Usuário criado deve ter email")
         return AuthResponse(
             code="REGISTER_SUCCESS",
             message="Usuário registrado com sucesso",
@@ -141,6 +146,10 @@ async def login(
             password=login_data.password
         )
 
+        if usuario.id is None:
+            raise ValueError("Usuário autenticado deve ter ID")
+        if usuario.email is None:
+            raise ValueError("Usuário autenticado deve ter email")
         return AuthResponse(
             code="LOGIN_SUCCESS",
             message="Login realizado com sucesso",

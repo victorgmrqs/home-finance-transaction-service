@@ -140,7 +140,7 @@ class Transaction:
 
     def valor_parcela(self) -> Decimal | None:
         """Calcula o valor de cada parcela (se aplicável)"""
-        if not self.is_parcelada():
+        if not self.is_parcelada() or self.parcelas is None:
             return None
         return self.valor / Decimal(self.parcelas)
 
