@@ -22,7 +22,11 @@ def setup_test_data():
                 "nome": "Usuário Teste",
                 "email": "teste@example.com"
             })
-            usuario_id = usuario_response.json()["data"]["id"]
+            assert usuario_response.status_code == 201, f"Erro ao criar usuário: {usuario_response.text}"
+            usuario_data = usuario_response.json()
+            assert usuario_data is not None, "Resposta não contém JSON válido"
+            assert "data" in usuario_data, f"Resposta não contém 'data': {usuario_data}"
+            usuario_id = usuario_data["data"]["id"]
 
             # Criar painel
             painel_response = await client.post("/api/v1/paineis", json={
@@ -31,7 +35,11 @@ def setup_test_data():
                 "tipo_conta": "CARTAO_CREDITO",
                 "usuario_id": usuario_id
             })
-            painel_id = painel_response.json()["data"]["id"]
+            assert painel_response.status_code == 201, f"Erro ao criar painel: {painel_response.text}"
+            painel_data = painel_response.json()
+            assert painel_data is not None, "Resposta não contém JSON válido"
+            assert "data" in painel_data, f"Resposta não contém 'data': {painel_data}"
+            painel_id = painel_data["data"]["id"]
 
             return {"usuario_id": usuario_id, "painel_id": painel_id}
 

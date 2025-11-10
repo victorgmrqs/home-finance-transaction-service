@@ -438,14 +438,24 @@ class AuthUserResponse(BaseModel):
 
 
 class AuthDataResponse(BaseModel):
-    """Schema de dados de autenticação"""
+    """Schema de dados de autenticação (com token no body - deprecated)"""
     user: AuthUserResponse = Field(..., description="Dados do usuário")
     token: str = Field(..., description="Token JWT de autenticação")
 
 
+class AuthDataResponseCookie(BaseModel):
+    """Schema de dados de autenticação (token via HttpOnly cookie)"""
+    user: AuthUserResponse = Field(..., description="Dados do usuário")
+
+
 class AuthResponse(BaseResponse):
-    """Schema de resposta para login/registro bem-sucedido"""
+    """Schema de resposta para login/registro bem-sucedido (com token no body - deprecated)"""
     data: AuthDataResponse = Field(..., description="Dados de autenticação")
+
+
+class AuthResponseCookie(BaseResponse):
+    """Schema de resposta para login/registro bem-sucedido (token via HttpOnly cookie)"""
+    data: AuthDataResponseCookie = Field(..., description="Dados do usuário")
 
     class Config:
         json_schema_extra = {
@@ -457,8 +467,7 @@ class AuthResponse(BaseResponse):
                         "id": 1,
                         "nome": "João Silva",
                         "email": "joao@example.com"
-                    },
-                    "token": "<JWT_TOKEN_AQUI>"
+                    }
                 }
             }
         }

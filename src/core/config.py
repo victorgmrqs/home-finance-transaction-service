@@ -5,6 +5,7 @@ Baseado em Pydantic Settings para validação e type hints
 
 import os
 from functools import lru_cache
+from typing import Literal
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -43,6 +44,13 @@ class Settings(BaseSettings):
     secret_key: str = ""
     access_token_expire_minutes: int = 30
     bcrypt_rounds: int = 12
+
+    # Configurações de cookies
+    cookie_name: str = "auth_token"
+    cookie_httponly: bool = True
+    cookie_secure: bool = False  # True apenas em produção (HTTPS)
+    cookie_samesite: Literal["lax", "strict", "none"] = "lax"  # lax, strict ou none
+    cookie_max_age: int = 1800  # 30 minutos (em segundos)
 
     # Configurações de rate limiting
     rate_limit_requests: int = 100
@@ -88,6 +96,18 @@ class Settings(BaseSettings):
         if v.upper() not in allowed_levels:
             raise ValueError(f"Nível de log deve ser um dos: {allowed_levels}")
         return v.upper()
+
+    @field_validator("cookie_samesite", mode="before")
+    @classmethod
+    def validate_cookie_samesite(cls, v):
+        """Valida se o valor de SameSite está dentro dos valores permitidos"""
+        if isinstance(v, str):
+            v_lower = v.lower()
+            allowed_values = ["lax", "strict", "none"]
+            if v_lower not in allowed_values:
+                raise ValueError(f"cookie_samesite deve ser um dos: {allowed_values}")
+            return v_lower
+        return v
 
     @property
     def cors_origins_list(self) -> list[str]:
@@ -151,6 +171,7 @@ class ProductionConfig(Settings):
     log_level: str = "WARNING"
     database_url: str = ""
     secret_key: str = ""
+    cookie_secure: bool = True  # HTTPS obrigatório em produção
 
     model_config = SettingsConfigDict(
         env_prefix="PROD_",

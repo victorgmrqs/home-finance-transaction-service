@@ -20,7 +20,11 @@ def setup_usuario():
                 "nome": "Usuário Teste Painéis",
                 "email": "testepaineis@example.com"
             })
-            usuario_id = response.json()["data"]["id"]
+            assert response.status_code == 201, f"Erro ao criar usuário: {response.text}"
+            response_data = response.json()
+            assert response_data is not None, "Resposta não contém JSON válido"
+            assert "data" in response_data, f"Resposta não contém 'data': {response_data}"
+            usuario_id = response_data["data"]["id"]
             return usuario_id
 
     return _setup
@@ -357,13 +361,21 @@ async def test_create_painel_same_name_different_users():
             "nome": "Usuário 1",
             "email": "user1@example.com"
         })
-        usuario1_id = usuario1_response.json()["data"]["id"]
+        assert usuario1_response.status_code == 201, f"Erro ao criar usuário 1: {usuario1_response.text}"
+        usuario1_data = usuario1_response.json()
+        assert usuario1_data is not None, "Resposta não contém JSON válido"
+        assert "data" in usuario1_data, f"Resposta não contém 'data': {usuario1_data}"
+        usuario1_id = usuario1_data["data"]["id"]
 
         usuario2_response = await client.post("/api/v1/usuarios", json={
             "nome": "Usuário 2",
             "email": "user2@example.com"
         })
-        usuario2_id = usuario2_response.json()["data"]["id"]
+        assert usuario2_response.status_code == 201, f"Erro ao criar usuário 2: {usuario2_response.text}"
+        usuario2_data = usuario2_response.json()
+        assert usuario2_data is not None, "Resposta não contém JSON válido"
+        assert "data" in usuario2_data, f"Resposta não contém 'data': {usuario2_data}"
+        usuario2_id = usuario2_data["data"]["id"]
 
         # Criar painéis com mesmo nome para usuários diferentes
         response1 = await client.post("/api/v1/paineis", json={
@@ -395,7 +407,11 @@ async def test_delete_usuario_cascades_paineis():
             "nome": "Usuário Para Deletar",
             "email": "deletar@example.com"
         })
-        usuario_id = usuario_response.json()["data"]["id"]
+        assert usuario_response.status_code == 201, f"Erro ao criar usuário: {usuario_response.text}"
+        usuario_data = usuario_response.json()
+        assert usuario_data is not None, "Resposta não contém JSON válido"
+        assert "data" in usuario_data, f"Resposta não contém 'data': {usuario_data}"
+        usuario_id = usuario_data["data"]["id"]
 
         # Criar painéis para o usuário
         painel1_response = await client.post("/api/v1/paineis", json={
@@ -404,7 +420,11 @@ async def test_delete_usuario_cascades_paineis():
             "tipo_conta": "CARTAO_CREDITO",
             "usuario_id": usuario_id
         })
-        painel1_id = painel1_response.json()["data"]["id"]
+        assert painel1_response.status_code == 201, f"Erro ao criar painel 1: {painel1_response.text}"
+        painel1_data = painel1_response.json()
+        assert painel1_data is not None, "Resposta não contém JSON válido"
+        assert "data" in painel1_data, f"Resposta não contém 'data': {painel1_data}"
+        painel1_id = painel1_data["data"]["id"]
 
         painel2_response = await client.post("/api/v1/paineis", json={
             "nome": "Painel 2",
@@ -412,7 +432,11 @@ async def test_delete_usuario_cascades_paineis():
             "tipo_conta": "CARTAO_CREDITO",
             "usuario_id": usuario_id
         })
-        painel2_id = painel2_response.json()["data"]["id"]
+        assert painel2_response.status_code == 201, f"Erro ao criar painel 2: {painel2_response.text}"
+        painel2_data = painel2_response.json()
+        assert painel2_data is not None, "Resposta não contém JSON válido"
+        assert "data" in painel2_data, f"Resposta não contém 'data': {painel2_data}"
+        painel2_id = painel2_data["data"]["id"]
 
         # Deletar usuário
         delete_response = await client.delete(f"/api/v1/usuarios/{usuario_id}")

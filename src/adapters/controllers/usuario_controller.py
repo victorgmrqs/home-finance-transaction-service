@@ -3,8 +3,10 @@ Usuario Controller
 Endpoints HTTP para gerenciamento de usuários
 """
 
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.adapters.presenters.usuario_presenter import (
@@ -26,9 +28,11 @@ from src.core.schemas_api import (
     UsuarioUpdateResponse,
 )
 from src.db.session import get_session
+from src.domain.exceptions import DatabaseException
 from src.domain.models.usuario import Usuario
 
 router = APIRouter(tags=["Usuários"])
+logger = logging.getLogger(__name__)
 
 
 @router.post("/usuarios", status_code=status.HTTP_201_CREATED, response_model=UsuarioCreateResponse)
@@ -42,19 +46,50 @@ async def create_usuario(
     - **nome**: Nome do usuário (obrigatório)
     - **email**: Email do usuário (opcional)
     """
-    # Converter request para entidade de domínio
-    usuario = Usuario(
-        id=None,
-        nome=request.nome,
-        email=request.email
-    )
+    try:
+        # Converter request para entidade de domínio
+        usuario = Usuario(
+            id=None,
+            nome=request.nome,
+            email=request.email
+        )
 
-    # Executar caso de uso
-    repository = UsuarioRepository(session)
-    service = UsuarioService(repository)
-    created = await service.create_usuario(usuario)
+        # Executar caso de uso
+        repository = UsuarioRepository(session)
+        service = UsuarioService(repository)
+        created = await service.create_usuario(usuario)
 
-    return present_usuario_created(created)
+        return present_usuario_created(created)
+    except DatabaseException as e:
+        # Log da exceção para rastreabilidade
+        logger.error(f"Erro de banco de dados ao criar usuário: {e}", exc_info=True)
+
+        # Verificar se é erro de email duplicado
+        error_msg = str(e).lower()
+        if "unique" in error_msg and "email" in error_msg:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Email já cadastrado no sistema"
+            ) from e
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        ) from e
+    except IntegrityError as e:
+        # Log da exceção para rastreabilidade
+        logger.error(f"Erro de integridade ao criar usuário: {e}", exc_info=True)
+
+        # Verificar se é erro de email duplicado
+        error_msg = str(e.orig).lower()
+        if "unique" in error_msg and "email" in error_msg:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Email já cadastrado no sistema"
+            ) from e
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Erro de integridade de dados"
+        ) from e
 
 
 @router.get("/usuarios", response_model=UsuarioListResponse)
@@ -72,16 +107,24 @@ async def list_usuarios(
     - **offset**: Offset para paginação (padrão: 0)
     - **nome**: Filtrar por nome
     """
-    repository = UsuarioRepository(session)
-    service = UsuarioService(repository)
+    try:
+        repository = UsuarioRepository(session)
+        service = UsuarioService(repository)
 
-    usuarios, total = await service.list_usuarios(
-        limit=limit,
-        offset=offset,
-        nome=nome
-    )
+        usuarios, total = await service.list_usuarios(
+            limit=limit,
+            offset=offset,
+            nome=nome
+        )
 
-    return present_usuario_list(usuarios, total)
+        return present_usuario_list(usuarios, total)
+    except DatabaseException as e:
+        # Log da exceção para rastreabilidade
+        logger.error(f"Erro de banco de dados ao listar usuários: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erro ao acessar o banco de dados"
+        ) from e
 
 
 @router.get("/usuarios/{id}", response_model=UsuarioDetailResponse)
@@ -114,14 +157,22 @@ async def get_usuario_by_email(
 
     - **email**: Email do usuário
     """
-    repository = UsuarioRepository(session)
-    service = UsuarioService(repository)
-    usuario = await service.get_usuario_by_email(email)
+    try:
+        repository = UsuarioRepository(session)
+        service = UsuarioService(repository)
+        usuario = await service.get_usuario_by_email(email)
 
-    if usuario is None:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+        if usuario is None:
+            raise HTTPException(status_code=404, detail="Usuário não encontrado")
 
-    return present_usuario_detail(usuario)
+        return present_usuario_detail(usuario)
+    except DatabaseException as e:
+        # Log da exceção para rastreabilidade
+        logger.error(f"Erro de banco de dados ao buscar usuário por email: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erro ao acessar o banco de dados"
+        ) from e
 
 
 @router.put("/usuarios/{id}", response_model=UsuarioUpdateResponse)

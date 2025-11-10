@@ -2,7 +2,7 @@
 Módulo de segurança - Hash de senhas e JWT
 """
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import bcrypt
 import jwt
@@ -108,7 +108,7 @@ class JWTManager:
         Returns:
             Token JWT codificado
         """
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
 
         # Define expiração
         if expires_delta:
