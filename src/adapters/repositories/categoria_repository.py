@@ -51,7 +51,7 @@ class CategoriaRepository:
             return self._to_domain(model)
         except Exception as e:
             await self.session.rollback()
-            raise DatabaseException(f"Erro ao criar categoria: {str(e)}", e)
+            raise DatabaseException(f"Erro ao criar categoria: {str(e)}", e) from e
 
     async def get_by_id(self, categoria_id: int) -> Categoria | None:
         """Busca categoria por ID"""
@@ -65,7 +65,7 @@ class CategoriaRepository:
 
             return self._to_domain(model)
         except Exception as e:
-            raise DatabaseException(f"Erro ao buscar categoria: {str(e)}", e)
+            raise DatabaseException(f"Erro ao buscar categoria: {str(e)}", e) from e
 
     async def list_all_for_user(self, usuario_id: int) -> list[Categoria]:
         """
@@ -92,7 +92,7 @@ class CategoriaRepository:
 
             return [self._to_domain(model) for model in models]
         except Exception as e:
-            raise DatabaseException(f"Erro ao listar categorias: {str(e)}", e)
+            raise DatabaseException(f"Erro ao listar categorias: {str(e)}", e) from e
 
     async def list_default_categories(self) -> list[Categoria]:
         """Lista apenas as categorias padrão do sistema"""
@@ -106,7 +106,7 @@ class CategoriaRepository:
 
             return [self._to_domain(model) for model in models]
         except Exception as e:
-            raise DatabaseException(f"Erro ao listar categorias padrão: {str(e)}", e)
+            raise DatabaseException(f"Erro ao listar categorias padrão: {str(e)}", e) from e
 
     async def list_user_categories(self, usuario_id: int) -> list[Categoria]:
         """Lista apenas as categorias customizadas do usuário"""
@@ -123,7 +123,7 @@ class CategoriaRepository:
 
             return [self._to_domain(model) for model in models]
         except Exception as e:
-            raise DatabaseException(f"Erro ao listar categorias do usuário: {str(e)}", e)
+            raise DatabaseException(f"Erro ao listar categorias do usuário: {str(e)}", e) from e
 
     async def find_by_name_and_user(self, nome: str, usuario_id: int) -> Categoria | None:
         """Busca categoria por nome e usuário (para verificar duplicatas)"""
@@ -142,7 +142,7 @@ class CategoriaRepository:
 
             return self._to_domain(model)
         except Exception as e:
-            raise DatabaseException(f"Erro ao buscar categoria por nome: {str(e)}", e)
+            raise DatabaseException(f"Erro ao buscar categoria por nome: {str(e)}", e) from e
 
     async def update(self, categoria_id: int, categoria: Categoria) -> Categoria | None:
         """Atualiza uma categoria"""
@@ -165,7 +165,7 @@ class CategoriaRepository:
             return self._to_domain(model)
         except Exception as e:
             await self.session.rollback()
-            raise DatabaseException(f"Erro ao atualizar categoria: {str(e)}", e)
+            raise DatabaseException(f"Erro ao atualizar categoria: {str(e)}", e) from e
 
     async def delete(self, categoria_id: int) -> bool:
         """Remove uma categoria"""
@@ -182,7 +182,7 @@ class CategoriaRepository:
             return True
         except Exception as e:
             await self.session.rollback()
-            raise DatabaseException(f"Erro ao deletar categoria: {str(e)}", e)
+            raise DatabaseException(f"Erro ao deletar categoria: {str(e)}", e) from e
 
     async def count_transactions_by_category(self, categoria_id: int) -> int:
         """Conta quantas transações usam esta categoria"""
@@ -195,7 +195,7 @@ class CategoriaRepository:
             result = await self.session.execute(stmt)
             return result.scalar_one()
         except Exception as e:
-            raise DatabaseException(f"Erro ao contar transações da categoria: {str(e)}", e)
+            raise DatabaseException(f"Erro ao contar transações da categoria: {str(e)}", e) from e
 
     async def has_transactions(self, categoria_id: int) -> bool:
         """Verifica se a categoria possui transações associadas"""

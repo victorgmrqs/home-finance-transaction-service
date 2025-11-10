@@ -92,8 +92,8 @@ async def create_categoria(
         return present_categoria_created(created)
     except DatabaseException as e:
         if "já existe" in str(e).lower():
-            raise HTTPException(status_code=409, detail=str(e))
-        raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=409, detail=str(e)) from e
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/categorias/{id}", response_model=CategoriaDetailResponse)
@@ -163,12 +163,12 @@ async def update_categoria(
         return present_categoria_updated(updated)
     except DatabaseException as e:
         if "não é possível editar categorias padrão" in str(e).lower():
-            raise HTTPException(status_code=403, detail=str(e))
+            raise HTTPException(status_code=403, detail=str(e)) from e
         elif "não tem permissão" in str(e).lower():
-            raise HTTPException(status_code=403, detail=str(e))
+            raise HTTPException(status_code=403, detail=str(e)) from e
         elif "já existe" in str(e).lower():
-            raise HTTPException(status_code=409, detail=str(e))
-        raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=409, detail=str(e)) from e
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.delete("/categorias/{id}", status_code=status.HTTP_200_OK, response_model=CategoriaDeleteResponse)
@@ -202,12 +202,12 @@ async def delete_categoria(
         return present_categoria_deleted(id)
     except DatabaseException as e:
         if "não é possível deletar categorias padrão" in str(e).lower():
-            raise HTTPException(status_code=403, detail=str(e))
+            raise HTTPException(status_code=403, detail=str(e)) from e
         elif "não tem permissão" in str(e).lower():
-            raise HTTPException(status_code=403, detail=str(e))
+            raise HTTPException(status_code=403, detail=str(e)) from e
         elif "transações associadas" in str(e).lower():
-            raise HTTPException(status_code=400, detail=str(e))
-        raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=400, detail=str(e)) from e
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 
