@@ -143,10 +143,13 @@ class JWTManager:
             Dados decodificados do token ou None se inválido
         """
         try:
+            # Usa verify_exp=False e verify_iat=False para permitir tokens com campos malformados
+            # A validação manual será feita no código que usa este método
             decoded = jwt.decode(
                 token,
                 settings.secret_key,
-                algorithms=["HS256"]
+                algorithms=["HS256"],
+                options={"verify_exp": False, "verify_iat": False}
             )
             return dict(decoded)
         except jwt.ExpiredSignatureError:

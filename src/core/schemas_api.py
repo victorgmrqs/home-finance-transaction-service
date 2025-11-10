@@ -471,3 +471,52 @@ class AuthResponseCookie(BaseResponse):
                 }
             }
         }
+
+
+# ===== SESSION RECOVERY SCHEMAS =====
+
+class SessionInfo(BaseModel):
+    """Informações da sessão do usuário"""
+    valid: bool = Field(..., description="Se a sessão é válida")
+    expires_at: str | None = Field(None, description="Data de expiração do token (ISO 8601)")
+    issued_at: str | None = Field(None, description="Data de emissão do token (ISO 8601)")
+
+
+class UserSessionData(BaseModel):
+    """Dados completos do usuário com informações de sessão"""
+    id: int = Field(..., description="ID do usuário")
+    nome: str = Field(..., description="Nome do usuário")
+    email: str = Field(..., description="Email do usuário")
+    criado_em: str | None = Field(None, description="Data de criação (ISO 8601)")
+
+
+class SessionRecoveryData(BaseModel):
+    """Schema de dados para recuperação de sessão"""
+    user: UserSessionData = Field(..., description="Dados do usuário")
+    session: SessionInfo = Field(..., description="Informações da sessão")
+
+
+class SessionRecoveryResponse(BaseResponse):
+    """Schema de resposta para recuperação de sessão (/auth/me)"""
+    data: SessionRecoveryData = Field(..., description="Dados do usuário e sessão")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "code": "SESSION_VALID",
+                "message": "Sessão recuperada com sucesso",
+                "data": {
+                    "user": {
+                        "id": 1,
+                        "nome": "João Silva",
+                        "email": "joao@example.com",
+                        "criado_em": "2025-01-01T00:00:00Z"
+                    },
+                    "session": {
+                        "valid": True,
+                        "expires_at": "2025-11-10T14:00:00Z",
+                        "issued_at": "2025-11-10T13:30:00Z"
+                    }
+                }
+            }
+        }
