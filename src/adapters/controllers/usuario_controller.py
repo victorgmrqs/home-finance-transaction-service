@@ -63,7 +63,7 @@ async def create_usuario(
     except DatabaseException as e:
         # Log da exceção para rastreabilidade
         logger.error(f"Erro de banco de dados ao criar usuário: {e}", exc_info=True)
-        
+
         # Verificar se é erro de email duplicado
         error_msg = str(e).lower()
         if "unique" in error_msg and "email" in error_msg:
@@ -78,7 +78,7 @@ async def create_usuario(
     except IntegrityError as e:
         # Log da exceção para rastreabilidade
         logger.error(f"Erro de integridade ao criar usuário: {e}", exc_info=True)
-        
+
         # Verificar se é erro de email duplicado
         error_msg = str(e.orig).lower()
         if "unique" in error_msg and "email" in error_msg:

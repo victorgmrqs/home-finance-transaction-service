@@ -4,9 +4,71 @@ Testes de integração para API de autenticação
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from unittest.mock import MagicMock, patch
 
 from src.core.config import settings
 from src.main import app
+
+
+def clear_rate_limiter_storage():
+    """Função auxiliar para limpar o storage do rate limiter"""
+    from src.adapters.controllers import auth_controller
+    
+    limiters = []
+    if hasattr(app.state, "limiter"):
+        limiters.append(app.state.limiter)
+    if hasattr(auth_controller, 'limiter'):
+        limiters.append(auth_controller.limiter)
+    
+    for limiter_obj in limiters:
+        if hasattr(limiter_obj, "_storage"):
+            try:
+                storage = limiter_obj._storage
+                # Usar reset() se disponível (mais eficaz para MemoryStorage)
+                if hasattr(storage, "reset"):
+                    storage.reset()
+                elif hasattr(storage, "clear"):
+                    storage.clear()
+                elif isinstance(storage, dict):
+                    storage.clear()
+            except Exception:
+                pass
+
+
+@pytest.fixture(autouse=True)
+def disable_rate_limiting(monkeypatch):
+    """Desabilita rate limiting para todos os testes de autenticação"""
+    # Limpar o storage antes de cada teste
+    clear_rate_limiter_storage()
+    
+    # Mockar get_remote_address para retornar valores únicos por teste
+    import time
+    import random
+    
+    # Usar um contador único por teste para garantir chaves diferentes
+    test_counter = [0]  # Usar lista para permitir modificação em closure
+    
+    def unique_key_func(request):
+        """Retorna uma chave única para cada chamada, evitando rate limiting"""
+        test_counter[0] += 1
+        return f"test_{id(request)}_{time.time()}_{random.random()}_{test_counter[0]}"
+    
+    # Substituir a função key_func do limiter
+    monkeypatch.setattr("slowapi.util.get_remote_address", unique_key_func)
+    
+    # Também substituir no limiter do app
+    if hasattr(app.state, "limiter"):
+        app.state.limiter.key_func = unique_key_func
+    
+    # E no limiter do auth_controller
+    from src.adapters.controllers import auth_controller
+    if hasattr(auth_controller, 'limiter'):
+        auth_controller.limiter.key_func = unique_key_func
+    
+    yield
+    
+    # Limpar novamente após o teste
+    clear_rate_limiter_storage()
 
 
 @pytest.mark.asyncio
@@ -30,23 +92,23 @@ async def test_register_with_httponly_cookie():
         assert "user" in data["data"]
         assert data["data"]["user"]["nome"] == "Usuário Teste"
         assert data["data"]["user"]["email"] == "register_test@example.com"
-        
+
         # Verificar que o token NÃO está no corpo da resposta
         assert "token" not in data["data"]
-        
+
         # Verificar que o cookie foi definido
         assert settings.cookie_name in response.cookies
         cookie = response.cookies[settings.cookie_name]
         assert cookie is not None
         assert len(cookie) > 0
-        
+
         # Verificar atributos do cookie (se disponíveis via response.headers)
         set_cookie_header = response.headers.get("set-cookie", "")
         assert settings.cookie_name in set_cookie_header
         assert "HttpOnly" in set_cookie_header
         assert "Path=/" in set_cookie_header
         assert f"SameSite={settings.cookie_samesite}" in set_cookie_header
-        
+
         # Em produção, deve ter Secure
         if settings.cookie_secure:
             assert "Secure" in set_cookie_header
@@ -66,7 +128,7 @@ async def test_login_with_httponly_cookie():
             "password": "SenhaSegura123!"
         })
         assert register_response.status_code == 201
-        
+
         # Fazer login
         login_response = await client.post("/api/v1/auth/login", json={
             "email": "login_test@example.com",
@@ -80,16 +142,16 @@ async def test_login_with_httponly_cookie():
         assert "data" in data
         assert "user" in data["data"]
         assert data["data"]["user"]["email"] == "login_test@example.com"
-        
+
         # Verificar que o token NÃO está no corpo da resposta
         assert "token" not in data["data"]
-        
+
         # Verificar que o cookie foi definido
         assert settings.cookie_name in login_response.cookies
         cookie = login_response.cookies[settings.cookie_name]
         assert cookie is not None
         assert len(cookie) > 0
-        
+
         # Verificar atributos do cookie
         set_cookie_header = login_response.headers.get("set-cookie", "")
         assert settings.cookie_name in set_cookie_header
@@ -112,8 +174,14 @@ async def test_login_invalid_credentials():
 
         assert response.status_code == 401
         data = response.json()
-        assert "detail" in data
-        
+        # O handler retorna o detail diretamente quando é um dict com "code"
+        assert "code" in data or "detail" in data
+        if "code" in data:
+            assert data["code"] == "INVALID_CREDENTIALS"
+            assert data["message"] == "Credenciais inválidas"
+        else:
+            assert "detail" in data
+
         # Verificar que nenhum cookie foi definido
         assert settings.cookie_name not in response.cookies
 
@@ -132,10 +200,10 @@ async def test_verify_token_with_cookie():
             "password": "SenhaSegura123!"
         })
         assert register_response.status_code == 201
-        
+
         # Obter o cookie do registro
         cookies = {settings.cookie_name: register_response.cookies[settings.cookie_name]}
-        
+
         # Verificar token usando o cookie
         verify_response = await client.get("/api/v1/auth/verify", cookies=cookies)
 
@@ -162,10 +230,10 @@ async def test_verify_token_with_header():
             "password": "SenhaSegura123!"
         })
         assert register_response.status_code == 201
-        
+
         # Obter o token do cookie (para teste, vamos usar diretamente)
         token = register_response.cookies[settings.cookie_name]
-        
+
         # Verificar token usando header Authorization
         verify_response = await client.get(
             "/api/v1/auth/verify",
@@ -190,7 +258,13 @@ async def test_verify_token_without_token():
 
         assert response.status_code == 401
         data = response.json()
-        assert "detail" in data
+        # O handler retorna o detail diretamente quando é um dict com "code"
+        assert "code" in data or "detail" in data
+        if "code" in data:
+            assert data["code"] == "MISSING_TOKEN"
+            assert data["message"] == "Token de autenticação não fornecido"
+        else:
+            assert "detail" in data
 
 
 @pytest.mark.asyncio
@@ -207,7 +281,7 @@ async def test_logout():
             "password": "SenhaSegura123!"
         })
         assert register_response.status_code == 201
-        
+
         # Fazer logout
         logout_response = await client.post("/api/v1/auth/logout")
 
@@ -215,11 +289,11 @@ async def test_logout():
         data = logout_response.json()
         assert data["code"] == "LOGOUT_SUCCESS"
         assert data["message"] == "Logout realizado com sucesso"
-        
+
         # Verificar que o cookie foi removido (ou definido com max_age=0)
         # A remoção pode ser indicada pelo cookie estar ausente ou com valor vazio
         set_cookie_header = logout_response.headers.get("set-cookie", "")
-        
+
         # Deve conter instruções para remover o cookie
         if set_cookie_header:
             assert settings.cookie_name in set_cookie_header
@@ -230,6 +304,9 @@ async def test_logout():
 @pytest.mark.asyncio
 async def test_register_duplicate_email():
     """Testa registro com email duplicado"""
+    # Limpar storage do rate limiter antes do teste
+    clear_rate_limiter_storage()
+    
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test"
@@ -241,7 +318,10 @@ async def test_register_duplicate_email():
             "password": "SenhaSegura123!"
         })
         assert first_response.status_code == 201
-        
+
+        # Limpar storage novamente antes da segunda requisição
+        clear_rate_limiter_storage()
+
         # Tentar registrar com o mesmo email
         duplicate_response = await client.post("/api/v1/auth/register", json={
             "nome": "Segundo Usuário",
@@ -249,9 +329,10 @@ async def test_register_duplicate_email():
             "password": "OutraSenha123!"
         })
 
-        assert duplicate_response.status_code == 409
+        assert duplicate_response.status_code == 409, f"Esperado 409, recebido {duplicate_response.status_code}. Resposta: {duplicate_response.text}"
         data = duplicate_response.json()
-        assert "detail" in data
+        # O handler pode retornar "detail" ou "code"/"message"
+        assert "detail" in data or "code" in data
         # Verificar que não há cookie na resposta de erro
         assert settings.cookie_name not in duplicate_response.cookies
 
@@ -278,6 +359,9 @@ async def test_register_weak_password():
 @pytest.mark.asyncio
 async def test_cookie_attributes():
     """Testa que os atributos do cookie estão corretos"""
+    # Limpar storage do rate limiter antes do teste
+    clear_rate_limiter_storage()
+    
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test"
@@ -289,17 +373,17 @@ async def test_cookie_attributes():
         })
 
         assert response.status_code == 201
-        
+
         # Analisar header Set-Cookie
         set_cookie_header = response.headers.get("set-cookie", "")
-        
+
         # Verificar atributos esperados
         assert f"{settings.cookie_name}=" in set_cookie_header
         assert "HttpOnly" in set_cookie_header
         assert "Path=/" in set_cookie_header
         assert f"Max-Age={settings.cookie_max_age}" in set_cookie_header
         assert f"SameSite={settings.cookie_samesite}" in set_cookie_header
-        
+
         # Secure só em produção
         if settings.cookie_secure:
             assert "Secure" in set_cookie_header
