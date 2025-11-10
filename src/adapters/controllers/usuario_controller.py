@@ -3,29 +3,29 @@ Usuario Controller
 Endpoints HTTP para gerenciamento de usuários
 """
 
-from fastapi import APIRouter, Depends, Query, status, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional
 
-from src.db.session import get_session
-from src.adapters.repositories.usuario_repository import UsuarioRepository
-from src.application.usuario_service import UsuarioService
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.adapters.presenters.usuario_presenter import (
     present_usuario_created,
+    present_usuario_deleted,
     present_usuario_detail,
     present_usuario_list,
     present_usuario_updated,
-    present_usuario_deleted
 )
+from src.adapters.repositories.usuario_repository import UsuarioRepository
+from src.application.usuario_service import UsuarioService
 from src.core.schemas_api import (
-    UsuarioCreateRequest, 
-    UsuarioUpdateRequest,
+    UsuarioCreateRequest,
     UsuarioCreateResponse,
+    UsuarioDeleteResponse,
     UsuarioDetailResponse,
     UsuarioListResponse,
+    UsuarioUpdateRequest,
     UsuarioUpdateResponse,
-    UsuarioDeleteResponse
 )
+from src.db.session import get_session
 from src.domain.models.usuario import Usuario
 
 router = APIRouter(tags=["Usuários"])
@@ -61,7 +61,7 @@ async def create_usuario(
 async def list_usuarios(
     limit: int = Query(10, ge=1, le=100, description="Limite de resultados"),
     offset: int = Query(0, ge=0, description="Offset para paginação"),
-    nome: Optional[str] = Query(None, description="Filtrar por nome"),
+    nome: str | None = Query(None, description="Filtrar por nome"),
     session: AsyncSession = Depends(get_session)
 ):
     """

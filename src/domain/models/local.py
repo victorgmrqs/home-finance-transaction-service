@@ -5,7 +5,6 @@ Representa um local onde transações podem ocorrer (lojas, mercados, etc.)
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 
 @dataclass
@@ -16,14 +15,14 @@ class Local:
     Representa um estabelecimento/local onde transações financeiras ocorrem.
     Conforme ADR-002, permite registro incremental de informações.
     """
-    id: Optional[int]
-    nome_fantasia: Optional[str] = None
-    cnpj: Optional[str] = None
-    razao_social: Optional[str] = None
-    categoria: Optional[str] = None
-    endereco: Optional[str] = None
-    criado_em: Optional[datetime] = None
-    atualizado_em: Optional[datetime] = None
+    id: int | None
+    nome_fantasia: str | None = None
+    cnpj: str | None = None
+    razao_social: str | None = None
+    categoria: str | None = None
+    endereco: str | None = None
+    criado_em: datetime | None = None
+    atualizado_em: datetime | None = None
 
     def __post_init__(self):
         """Valida o local após inicialização"""
@@ -77,7 +76,7 @@ class Local:
         """Verifica se o local é um rascunho (dados incompletos)"""
         return not self.is_completo()
 
-    def formatar_cnpj(self) -> Optional[str]:
+    def formatar_cnpj(self) -> str | None:
         """Retorna CNPJ formatado (XX.XXX.XXX/XXXX-XX)"""
         if not self.cnpj:
             return None

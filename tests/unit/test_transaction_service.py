@@ -3,15 +3,20 @@ Testes de Serviço: TransactionService
 Testa a lógica de negócio da camada de aplicação para transações
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock
 from datetime import date, datetime
 from decimal import Decimal
+from unittest.mock import AsyncMock
+
+import pytest
+
 from src.application.transaction_service import TransactionService
-from src.domain.models.transaction import Transaction, TransactionType, Recurrence
-from src.domain.exceptions import TransactionNotFoundException, InvalidTransactionException, DatabaseException
-from src.ports.transaction_port import ITransactionRepository
+from src.domain.exceptions import (
+    DatabaseException,
+    TransactionNotFoundException,
+)
+from src.domain.models.transaction import Transaction, TransactionType
 from src.ports.local_port import ILocalRepository
+from src.ports.transaction_port import ITransactionRepository
 
 
 class TestTransactionService:

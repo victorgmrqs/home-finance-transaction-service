@@ -5,17 +5,19 @@ Formatadores de resposta para endpoints de categorias
 
 from src.core.schemas_api import (
     CategoriaCreateResponse,
+    CategoriaDeleteResponse,
     CategoriaDetailResponse,
     CategoriaListResponse,
+    CategoriaResponse,
     CategoriaUpdateResponse,
-    CategoriaDeleteResponse,
-    CategoriaResponse
 )
 from src.domain.models.categoria import Categoria
 
 
 def present_categoria_response(categoria: Categoria) -> CategoriaResponse:
     """Converte entidade de domínio para schema de resposta"""
+    if categoria.id is None:
+        raise ValueError("Categoria deve ter ID para apresentação")
     return CategoriaResponse(
         id=categoria.id,
         nome=categoria.nome,

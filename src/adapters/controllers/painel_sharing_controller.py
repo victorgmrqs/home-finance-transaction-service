@@ -3,18 +3,15 @@ Painel Sharing Controller
 Endpoints HTTP para compartilhamento de painéis
 """
 
-from fastapi import APIRouter, Depends, Request, status, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.db.session import get_session
-from src.adapters.repositories.painel_repository import PainelRepository
-from src.adapters.repositories.models import PainelUsuarioModel
-from src.core.schemas_api import (
-    CompartilhamentoPainelRequest,
-    CompartilhamentoPainelUpdateRequest
-)
 from src.adapters.middlewares.auth_middleware import get_current_user_id
+from src.adapters.repositories.models import PainelUsuarioModel
+from src.adapters.repositories.painel_repository import PainelRepository
+from src.core.schemas_api import CompartilhamentoPainelRequest, CompartilhamentoPainelUpdateRequest
+from src.db.session import get_session
 from src.shared.responses import success_response
 
 router = APIRouter(tags=["Painéis - Compartilhamento"])
@@ -162,7 +159,7 @@ async def atualizar_compartilhamento(
             }
         )
 
-    compartilhamento.tipo_permissao = update.tipo_permissao
+    compartilhamento.tipo_permissao = update.tipo_permissao  # type: ignore[assignment]
     await session.commit()
     await session.refresh(compartilhamento)
 

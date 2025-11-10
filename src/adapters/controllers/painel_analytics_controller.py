@@ -3,16 +3,16 @@ Painel Analytics Controller
 Endpoints HTTP para análises e estatísticas de painéis
 """
 
-from fastapi import APIRouter, Depends, Query, Request, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional
 from datetime import date
 
-from src.db.session import get_session
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.adapters.middlewares.auth_middleware import get_current_user_id
 from src.adapters.repositories.painel_repository import PainelRepository
 from src.adapters.repositories.transaction_repository import TransactionRepository
 from src.application.painel_service import PainelService
-from src.adapters.middlewares.auth_middleware import get_current_user_id
+from src.db.session import get_session
 from src.shared.responses import success_response
 
 router = APIRouter(tags=["Painéis - Analytics"])
@@ -22,8 +22,8 @@ router = APIRouter(tags=["Painéis - Analytics"])
 async def get_painel_balanco(
     request: Request,
     id: int,
-    data_inicio: Optional[date] = Query(None, description="Data inicial (YYYY-MM-DD)"),
-    data_fim: Optional[date] = Query(None, description="Data final (YYYY-MM-DD)"),
+    data_inicio: date | None = Query(None, description="Data inicial (YYYY-MM-DD)"),
+    data_fim: date | None = Query(None, description="Data final (YYYY-MM-DD)"),
     session: AsyncSession = Depends(get_session),
     usuario_id: int = Depends(get_current_user_id)
 ):

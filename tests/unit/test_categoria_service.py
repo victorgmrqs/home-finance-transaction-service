@@ -3,12 +3,14 @@ Testes de Serviço: CategoriaService
 Testa a lógica de negócio da camada de aplicação para categorias
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime
+from unittest.mock import AsyncMock
+
+import pytest
+
 from src.application.categoria_service import CategoriaService
-from src.domain.models.categoria import Categoria
 from src.domain.exceptions import DatabaseException
+from src.domain.models.categoria import Categoria
 
 
 class TestCategoriaService:

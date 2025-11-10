@@ -2,10 +2,12 @@
 Testes para a entidade de domínio Transaction
 """
 
-import pytest
-from decimal import Decimal
 from datetime import date
-from src.domain.models.transaction import Transaction, TransactionType, Recurrence
+from decimal import Decimal
+
+import pytest
+
+from src.domain.models.transaction import Recurrence, Transaction, TransactionType
 
 
 def test_criar_transacao_valida():

@@ -3,13 +3,14 @@ Usuario Repository
 Implementação do repositório de usuários usando SQLAlchemy
 """
 
-from typing import Optional, List
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from src.domain.models.usuario import Usuario
+
 from src.adapters.repositories.models import UsuarioModel
 from src.domain.exceptions import DatabaseException
+from src.domain.models.usuario import Usuario
 
 
 class UsuarioRepository:
@@ -21,12 +22,12 @@ class UsuarioRepository:
     def _to_domain(self, model: UsuarioModel) -> Usuario:
         """Converte model do SQLAlchemy para entidade de domínio"""
         return Usuario(
-            id=model.id,
-            nome=model.nome,
-            email=model.email,
-            password_hash=model.password_hash,
-            criado_em=model.criado_em,
-            atualizado_em=model.atualizado_em
+            id=model.id,  # type: ignore[arg-type]
+            nome=model.nome,  # type: ignore[arg-type]
+            email=model.email,  # type: ignore[arg-type]
+            password_hash=model.password_hash,  # type: ignore[arg-type]
+            criado_em=model.criado_em,  # type: ignore[arg-type]
+            atualizado_em=model.atualizado_em  # type: ignore[arg-type]
         )
 
     def _to_model(self, usuario: Usuario) -> UsuarioModel:
@@ -50,7 +51,7 @@ class UsuarioRepository:
             await self.session.rollback()
             raise DatabaseException(f"Erro ao criar usuário: {str(e)}", e)
 
-    async def get_by_id(self, usuario_id: int) -> Optional[Usuario]:
+    async def get_by_id(self, usuario_id: int) -> Usuario | None:
         """Busca usuário por ID"""
         try:
             stmt = select(UsuarioModel).where(UsuarioModel.id == usuario_id)
@@ -64,7 +65,7 @@ class UsuarioRepository:
         except Exception as e:
             raise DatabaseException(f"Erro ao buscar usuário: {str(e)}", e)
 
-    async def get_by_email(self, email: str) -> Optional[Usuario]:
+    async def get_by_email(self, email: str) -> Usuario | None:
         """Busca usuário por email"""
         try:
             stmt = select(UsuarioModel).where(UsuarioModel.email == email)
@@ -82,8 +83,8 @@ class UsuarioRepository:
         self,
         limit: int = 10,
         offset: int = 0,
-        nome: Optional[str] = None
-    ) -> List[Usuario]:
+        nome: str | None = None
+    ) -> list[Usuario]:
         """Lista usuários com filtros opcionais"""
         try:
             stmt = select(UsuarioModel)
@@ -105,7 +106,7 @@ class UsuarioRepository:
         except Exception as e:
             raise DatabaseException(f"Erro ao listar usuários: {str(e)}", e)
 
-    async def update(self, usuario_id: int, usuario: Usuario) -> Optional[Usuario]:
+    async def update(self, usuario_id: int, usuario: Usuario) -> Usuario | None:
         """Atualiza um usuário"""
         try:
             stmt = select(UsuarioModel).where(UsuarioModel.id == usuario_id)
@@ -116,11 +117,11 @@ class UsuarioRepository:
                 return None
 
             # Atualizar campos
-            model.nome = usuario.nome
-            model.email = usuario.email
+            model.nome = usuario.nome  # type: ignore[assignment]
+            model.email = usuario.email  # type: ignore[assignment]
             if usuario.password_hash:
-                model.password_hash = usuario.password_hash
-            model.atualizado_em = datetime.now(timezone.utc)
+                model.password_hash = usuario.password_hash  # type: ignore[assignment]
+            model.atualizado_em = datetime.now(UTC)  # type: ignore[assignment]
 
             await self.session.commit()
             await self.session.refresh(model)
@@ -147,7 +148,7 @@ class UsuarioRepository:
             await self.session.rollback()
             raise DatabaseException(f"Erro ao deletar usuário: {str(e)}", e)
 
-    async def count(self, nome: Optional[str] = None) -> int:
+    async def count(self, nome: str | None = None) -> int:
         """Conta total de usuários com filtros"""
         try:
             stmt = select(func.count(UsuarioModel.id))

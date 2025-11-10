@@ -3,7 +3,7 @@ Local Presenter
 Formatação de responses para endpoints de locais
 """
 
-from typing import List
+
 from src.domain.models.local import Local
 from src.shared.responses import success_response
 
@@ -25,8 +25,8 @@ def present_local(local: Local) -> dict:
         "razao_social": local.razao_social,
         "categoria": local.categoria,
         "endereco": local.endereco,
-        "criado_em": local.criado_em.isoformat(),
-        "atualizado_em": local.atualizado_em.isoformat()
+        "criado_em": local.criado_em.isoformat() if local.criado_em else None,
+        "atualizado_em": local.atualizado_em.isoformat() if local.atualizado_em else None
     }
 
 
@@ -48,7 +48,7 @@ def present_local_detail(local: Local) -> dict:
     )
 
 
-def present_local_list(locais: List[Local], total: int) -> dict:
+def present_local_list(locais: list[Local], total: int) -> dict:
     """
     Apresenta lista de locais
 

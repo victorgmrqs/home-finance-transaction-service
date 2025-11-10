@@ -4,7 +4,7 @@ Define o contrato que os repositórios de usuários devem implementar
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, List
+
 from src.domain.models.usuario import Usuario
 
 
@@ -17,12 +17,12 @@ class UsuarioRepositoryPort(ABC):
         pass
 
     @abstractmethod
-    async def get_by_id(self, usuario_id: int) -> Optional[Usuario]:
+    async def get_by_id(self, usuario_id: int) -> Usuario | None:
         """Busca usuário por ID"""
         pass
 
     @abstractmethod
-    async def get_by_email(self, email: str) -> Optional[Usuario]:
+    async def get_by_email(self, email: str) -> Usuario | None:
         """Busca usuário por email"""
         pass
 
@@ -31,13 +31,13 @@ class UsuarioRepositoryPort(ABC):
         self,
         limit: int = 10,
         offset: int = 0,
-        nome: Optional[str] = None
-    ) -> List[Usuario]:
+        nome: str | None = None
+    ) -> list[Usuario]:
         """Lista usuários com filtros opcionais"""
         pass
 
     @abstractmethod
-    async def update(self, usuario_id: int, usuario: Usuario) -> Optional[Usuario]:
+    async def update(self, usuario_id: int, usuario: Usuario) -> Usuario | None:
         """Atualiza um usuário"""
         pass
 
@@ -47,6 +47,6 @@ class UsuarioRepositoryPort(ABC):
         pass
 
     @abstractmethod
-    async def count(self, nome: Optional[str] = None) -> int:
+    async def count(self, nome: str | None = None) -> int:
         """Conta total de usuários com filtros"""
         pass

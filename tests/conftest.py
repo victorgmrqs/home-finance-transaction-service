@@ -2,12 +2,13 @@
 Configuracao de fixtures do pytest para testes
 """
 
+import os
+
 import pytest
 import pytest_asyncio
-import os
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from src.adapters.repositories.models import Base
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from src.adapters.repositories.models import Base
 
 # Configurar banco de testes
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
@@ -20,21 +21,55 @@ def anyio_backend():
     return "asyncio"
 
 
-@pytest.fixture(scope="function", autouse=True)
-async def clean_database():
-    """Limpa o banco de dados antes de cada teste de integracao"""
-    from src.db.session import engine
+@pytest_asyncio.fixture(scope="session")
+async def setup_database():
+    """
+    Setup inicial do banco de dados - cria tabelas uma vez para toda a sessão de testes.
+    Isso melhora significativamente a performance ao evitar criar/dropar tabelas para cada teste.
+    """
     from src.adapters.repositories.models import Base
+    from src.db.session import engine
 
+    # Criar todas as tabelas uma vez
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
     yield
 
-    # Cleanup apos teste
+    # Cleanup final - dropar todas as tabelas ao final de todos os testes
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
+
+
+@pytest_asyncio.fixture(scope="function", autouse=True)
+async def clean_database(setup_database):
+    """
+    Limpa o banco de dados antes e depois de cada teste.
+
+    Usa DELETE rápido ao invés de DROP/CREATE para melhor performance.
+    Mantém a estrutura das tabelas e apenas limpa os dados.
+    """
+    from src.adapters.repositories.models import Base
+    from src.db.session import engine
+
+    yield
+
+    # Cleanup apos teste - limpar dados mas manter estrutura para performance
+    # Usar DELETE ao invés de DROP/CREATE para melhor performance
+    try:
+        async with engine.begin() as conn:
+            # Limpar dados de todas as tabelas em ordem reversa (respeitando foreign keys)
+            # Isso é muito mais rápido que DROP/CREATE
+            for table in reversed(Base.metadata.sorted_tables):
+                try:
+                    await conn.execute(table.delete())
+                except Exception:
+                    # Ignorar erros se a tabela não existir ou não tiver dados
+                    pass
+    except Exception:
+        # Se falhar, pode ser que o engine não esteja inicializado
+        # Isso é OK para testes unitários que não usam banco
+        pass
 
 
 @pytest_asyncio.fixture

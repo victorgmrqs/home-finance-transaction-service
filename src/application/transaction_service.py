@@ -4,13 +4,14 @@ Serviço de aplicação para transações
 Orquestra a lógica de negócio relacionada a transações
 """
 
-from typing import Optional, List
 from datetime import date
-from dateutil.relativedelta import relativedelta
 from decimal import Decimal
-from src.ports.transaction_port import ITransactionRepository
-from src.domain.models.transaction import Transaction
+
+from dateutil.relativedelta import relativedelta  # type: ignore[import-untyped]
+
 from src.domain.exceptions import TransactionNotFoundException
+from src.domain.models.transaction import Transaction
+from src.ports.transaction_port import ITransactionRepository
 
 
 class TransactionService:
@@ -72,14 +73,14 @@ class TransactionService:
         self,
         limit: int = 10,
         offset: int = 0,
-        tipo: Optional[str] = None,
-        categoria: Optional[str] = None,
-        local_id: Optional[int] = None,
-        painel_id: Optional[int] = None,
-        descricao: Optional[str] = None,
-        data_inicio: Optional[date] = None,
-        data_fim: Optional[date] = None
-    ) -> tuple[List[Transaction], int]:
+        tipo: str | None = None,
+        categoria: str | None = None,
+        local_id: int | None = None,
+        painel_id: int | None = None,
+        descricao: str | None = None,
+        data_inicio: date | None = None,
+        data_fim: date | None = None
+    ) -> tuple[list[Transaction], int]:
         """
         Lista transações com filtros e paginação
 
@@ -184,6 +185,8 @@ class TransactionService:
             Transaction: Primeira parcela criada (transação "mãe")
         """
         parcelas = transaction.parcelas
+        if parcelas is None:
+            raise ValueError("Transação deve ter número de parcelas definido")
         valor_total = transaction.valor
         data_base = transaction.data
 
@@ -193,7 +196,7 @@ class TransactionService:
         # Ajustar primeira parcela para compensar arredondamento
         valor_primeira_parcela = valor_total - (valor_parcela * (parcelas - 1))
 
-        transacoes_criadas = []
+        transacoes_criadas: list[Transaction] = []
 
         # Criar todas as parcelas
         for i in range(1, parcelas + 1):
@@ -243,7 +246,7 @@ class TransactionService:
         # Retornar primeira parcela (transação "mãe")
         return transacoes_criadas[0]
 
-    async def list_installments(self, transaction_id: int) -> List[Transaction]:
+    async def list_installments(self, transaction_id: int) -> list[Transaction]:
         """
         Lista todas as parcelas de uma transação parcelada
 
@@ -264,6 +267,8 @@ class TransactionService:
             return [transaction]
 
         # Encontrar a transação mãe
+        if transaction.id is None:
+            raise ValueError("Transação deve ter ID para buscar parcelas")
         mae_id = transaction.transacao_mae_id if transaction.transacao_mae_id else transaction.id
 
         # Buscar todas as parcelas (incluindo a mãe)

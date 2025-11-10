@@ -4,7 +4,7 @@ Define o contrato que o repositório de locais deve implementar
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, List
+
 from src.domain.models.local import Local
 
 
@@ -17,22 +17,22 @@ class ILocalRepository(ABC):
         pass
 
     @abstractmethod
-    async def get_by_id(self, local_id: int) -> Optional[Local]:
+    async def get_by_id(self, local_id: int) -> Local | None:
         """Busca local por ID"""
         pass
 
     @abstractmethod
-    async def get_by_cnpj(self, cnpj: str) -> Optional[Local]:
+    async def get_by_cnpj(self, cnpj: str) -> Local | None:
         """Busca local por CNPJ"""
         pass
 
     @abstractmethod
-    async def list_all(self, limit: int = 100, offset: int = 0) -> List[Local]:
+    async def list_all(self, limit: int = 100, offset: int = 0) -> list[Local]:
         """Lista todos os locais"""
         pass
 
     @abstractmethod
-    async def update(self, local_id: int, local: Local) -> Optional[Local]:
+    async def update(self, local_id: int, local: Local) -> Local | None:
         """Atualiza um local"""
         pass
 

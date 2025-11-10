@@ -3,14 +3,16 @@ Testes de Repositório: PainelRepository
 Testa as operações de banco de dados para painéis
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.adapters.repositories.painel_repository import PainelRepository
+
 from src.adapters.repositories.models import PainelModel
-from src.domain.models.painel import Painel
+from src.adapters.repositories.painel_repository import PainelRepository
 from src.domain.exceptions import DatabaseException
+from src.domain.models.painel import Painel
 
 
 class TestPainelRepository:
@@ -173,9 +175,9 @@ class TestPainelRepository:
         mock_session.execute.return_value = mock_result
 
         paineis = await repository.list_by_usuario(
-            usuario_id=1, 
-            limit=10, 
-            offset=0, 
+            usuario_id=1,
+            limit=10,
+            offset=0,
             nome="Casa"
         )
 
@@ -204,9 +206,9 @@ class TestPainelRepository:
         mock_session.execute.return_value = mock_result
 
         paineis = await repository.list_all(
-            limit=10, 
-            offset=0, 
-            usuario_id=1, 
+            limit=10,
+            offset=0,
+            usuario_id=1,
             nome="Casa"
         )
 

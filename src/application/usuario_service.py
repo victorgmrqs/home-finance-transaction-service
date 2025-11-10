@@ -4,7 +4,7 @@ Serviço de aplicação para usuários
 Orquestra a lógica de negócio relacionada a usuários
 """
 
-from typing import Optional, List
+
 from src.adapters.repositories.usuario_repository import UsuarioRepository
 from src.domain.models.usuario import Usuario
 
@@ -35,7 +35,7 @@ class UsuarioService:
         # A validação já ocorre no __post_init__ da entidade
         return await self.repository.create(usuario)
 
-    async def get_usuario(self, usuario_id: int) -> Optional[Usuario]:
+    async def get_usuario(self, usuario_id: int) -> Usuario | None:
         """
         Busca usuário por ID
 
@@ -47,7 +47,7 @@ class UsuarioService:
         """
         return await self.repository.get_by_id(usuario_id)
 
-    async def get_usuario_by_email(self, email: str) -> Optional[Usuario]:
+    async def get_usuario_by_email(self, email: str) -> Usuario | None:
         """
         Busca usuário por email
 
@@ -63,8 +63,8 @@ class UsuarioService:
         self,
         limit: int = 10,
         offset: int = 0,
-        nome: Optional[str] = None
-    ) -> tuple[List[Usuario], int]:
+        nome: str | None = None
+    ) -> tuple[list[Usuario], int]:
         """
         Lista usuários com filtros e paginação
 
@@ -90,7 +90,7 @@ class UsuarioService:
         self,
         usuario_id: int,
         usuario: Usuario
-    ) -> Optional[Usuario]:
+    ) -> Usuario | None:
         """
         Atualiza um usuário existente
 

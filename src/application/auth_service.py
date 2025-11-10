@@ -3,16 +3,15 @@ Serviço de aplicação: Autenticação
 Responsável pela lógica de login, registro e geração de tokens
 """
 
-from typing import Optional
-from datetime import timedelta
+
+from src.core.security import JWTManager, PasswordHasher, PasswordValidator
+from src.domain.exceptions import (
+    BusinessRuleViolationError,
+    DuplicateEntityError,
+    EntityNotFoundError,
+)
 from src.domain.models.usuario import Usuario
 from src.ports.usuario_port import UsuarioRepositoryPort
-from src.core.security import PasswordHasher, PasswordValidator, JWTManager
-from src.domain.exceptions import (
-    EntityNotFoundError,
-    BusinessRuleViolationError,
-    DuplicateEntityError
-)
 
 
 class AuthService:
@@ -130,7 +129,7 @@ class AuthService:
 
         return usuario, token
 
-    async def verify_token(self, token: str) -> Optional[dict]:
+    async def verify_token(self, token: str) -> dict | None:
         """
         Verifica e decodifica um token JWT
 
@@ -142,7 +141,7 @@ class AuthService:
         """
         return self.jwt_manager.decode_access_token(token)
 
-    async def get_current_user(self, token: str) -> Optional[Usuario]:
+    async def get_current_user(self, token: str) -> Usuario | None:
         """
         Obtém o usuário atual a partir do token
 
@@ -161,6 +160,7 @@ class AuthService:
             return None
 
         try:
-            return await self.usuario_repository.get_by_id(int(user_id))
-        except EntityNotFoundError:
+            user_id_int = int(str(user_id))
+            return await self.usuario_repository.get_by_id(user_id_int)
+        except (EntityNotFoundError, ValueError, TypeError):
             return None

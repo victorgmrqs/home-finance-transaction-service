@@ -4,15 +4,26 @@ Define os modelos de banco de dados usando SQLAlchemy
 """
 
 from sqlalchemy import (
-    Column, Integer, String, Numeric, Date, DateTime,
-    Text, ForeignKey, CheckConstraint, Index, func, UniqueConstraint, Boolean
+    Boolean,
+    CheckConstraint,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
 )
 from sqlalchemy.orm import declarative_base, relationship
 
-Base = declarative_base()
+Base = declarative_base()  # type: ignore[assignment, misc, valid-type, name-defined]
 
 
-class UsuarioModel(Base):
+class UsuarioModel(Base):  # type: ignore[misc, valid-type]
     """Modelo ORM para a tabela usuarios"""
     __tablename__ = "usuarios"
 
@@ -36,7 +47,7 @@ class UsuarioModel(Base):
         return f"<Usuario(id={self.id}, nome='{self.nome}', email='{self.email}')>"
 
 
-class PainelModel(Base):
+class PainelModel(Base):  # type: ignore[misc, valid-type]
     """Modelo ORM para a tabela paineis"""
     __tablename__ = "paineis"
 
@@ -78,7 +89,7 @@ class PainelModel(Base):
         return f"<Painel(id={self.id}, nome='{self.nome}', usuario_id={self.usuario_id})>"
 
 
-class PainelUsuarioModel(Base):
+class PainelUsuarioModel(Base):  # type: ignore[misc, valid-type]
     """Modelo ORM para a tabela painel_usuarios (compartilhamento)"""
     __tablename__ = "painel_usuarios"
 
@@ -121,7 +132,7 @@ class PainelUsuarioModel(Base):
         return f"<PainelUsuario(id={self.id}, painel_id={self.painel_id}, usuario_id={self.usuario_id}, permissao='{self.tipo_permissao}')>"
 
 
-class LocalModel(Base):
+class LocalModel(Base):  # type: ignore[misc, valid-type]
     """Modelo ORM para a tabela locais"""
     __tablename__ = "locais"
 
@@ -146,7 +157,7 @@ class LocalModel(Base):
         return f"<Local(id={self.id}, nome_fantasia='{self.nome_fantasia}', cnpj='{self.cnpj}')>"
 
 
-class TransactionModel(Base):
+class TransactionModel(Base):  # type: ignore[misc, valid-type]
     """Modelo ORM para a tabela transacoes"""
     __tablename__ = "transacoes"
 
@@ -267,7 +278,7 @@ class TransactionModel(Base):
         )
 
 
-class CategoriaModel(Base):
+class CategoriaModel(Base):  # type: ignore[misc, valid-type]
     """Modelo ORM para a tabela categorias"""
     __tablename__ = "categorias"
 

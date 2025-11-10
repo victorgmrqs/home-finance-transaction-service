@@ -3,15 +3,17 @@ Testes de Repositório: TransactionRepository
 Testa as operações de banco de dados para transações (atualizado com painel_id)
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock
 from datetime import date, datetime
 from decimal import Decimal
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.adapters.repositories.transaction_repository import TransactionRepository
+
 from src.adapters.repositories.models import TransactionModel
-from src.domain.models.transaction import Transaction, TransactionType, Recurrence
+from src.adapters.repositories.transaction_repository import TransactionRepository
 from src.domain.exceptions import DatabaseException
+from src.domain.models.transaction import Recurrence, Transaction, TransactionType
 
 
 class TestTransactionRepository:
@@ -160,8 +162,8 @@ class TestTransactionRepository:
         mock_session.execute.return_value = mock_result
 
         transactions = await repository.list_all(
-            limit=10, 
-            offset=0, 
+            limit=10,
+            offset=0,
             tipo="ENTRADA",
             categoria="salario",
             painel_id=1,

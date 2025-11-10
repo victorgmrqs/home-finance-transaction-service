@@ -3,14 +3,15 @@ Transaction Repository
 Implementação do repositório de transações usando SQLAlchemy
 """
 
-from typing import Optional, List
-from datetime import datetime, timezone, date
+from datetime import date, datetime
+
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from src.ports.transaction_port import ITransactionRepository
-from src.domain.models.transaction import Transaction, TransactionType, Recurrence, TipoDivisao
+
 from src.adapters.repositories.models import TransactionModel
 from src.domain.exceptions import DatabaseException
+from src.domain.models.transaction import Recurrence, TipoDivisao, Transaction, TransactionType
+from src.ports.transaction_port import ITransactionRepository
 
 
 class TransactionRepository(ITransactionRepository):
@@ -22,29 +23,29 @@ class TransactionRepository(ITransactionRepository):
     def _to_domain(self, model: TransactionModel) -> Transaction:
         """Converte model do SQLAlchemy para entidade de domínio"""
         return Transaction(
-            id=model.id,
-            data=model.data,
-            descricao=model.descricao,
-            valor=model.valor,
-            tipo=TransactionType(model.tipo),
-            categoria=model.categoria,
-            recorrencia=Recurrence(model.recorrencia) if model.recorrencia else None,
-            parcelas=model.parcelas,
-            tipo_divisao=TipoDivisao(model.tipo_divisao) if model.tipo_divisao else TipoDivisao.PESSOAL,
-            valor_por_pessoa=model.valor_por_pessoa,
-            porcentagem_divisao=model.porcentagem_divisao,
-            local_id=model.local_id,
-            painel_id=model.painel_id,
+            id=model.id,  # type: ignore[arg-type]
+            data=model.data,  # type: ignore[arg-type]
+            descricao=model.descricao,  # type: ignore[arg-type]
+            valor=model.valor,  # type: ignore[arg-type]
+            tipo=TransactionType(model.tipo),  # type: ignore[arg-type]
+            categoria=model.categoria,  # type: ignore[arg-type]
+            recorrencia=Recurrence(model.recorrencia) if model.recorrencia else None,  # type: ignore[arg-type]
+            parcelas=model.parcelas,  # type: ignore[arg-type]
+            tipo_divisao=TipoDivisao(model.tipo_divisao) if model.tipo_divisao else TipoDivisao.PESSOAL,  # type: ignore[arg-type]
+            valor_por_pessoa=model.valor_por_pessoa,  # type: ignore[arg-type]
+            porcentagem_divisao=model.porcentagem_divisao,  # type: ignore[arg-type]
+            local_id=model.local_id,  # type: ignore[arg-type]
+            painel_id=model.painel_id,  # type: ignore[arg-type]
             # Campos de parcelamento
-            parcela_numero=model.parcela_numero,
-            transacao_mae_id=model.transacao_mae_id,
-            eh_parcela=model.eh_parcela,
+            parcela_numero=model.parcela_numero,  # type: ignore[arg-type]
+            transacao_mae_id=model.transacao_mae_id,  # type: ignore[arg-type]
+            eh_parcela=model.eh_parcela,  # type: ignore[arg-type]
             # Campos de recorrência
-            transacao_recorrente_origem_id=model.transacao_recorrente_origem_id,
-            recorrencia_ativa=model.recorrencia_ativa,
-            proxima_geracao=model.proxima_geracao,
-            criado_em=model.criado_em,
-            atualizado_em=model.atualizado_em
+            transacao_recorrente_origem_id=model.transacao_recorrente_origem_id,  # type: ignore[arg-type]
+            recorrencia_ativa=model.recorrencia_ativa,  # type: ignore[arg-type]
+            proxima_geracao=model.proxima_geracao,  # type: ignore[arg-type]
+            criado_em=model.criado_em,  # type: ignore[arg-type]
+            atualizado_em=model.atualizado_em  # type: ignore[arg-type]
         )
 
     def _to_model(self, transaction: Transaction) -> TransactionModel:
@@ -85,7 +86,7 @@ class TransactionRepository(ITransactionRepository):
             await self.session.rollback()
             raise DatabaseException(f"Erro ao criar transação: {str(e)}", e)
 
-    async def get_by_id(self, transaction_id: int) -> Optional[Transaction]:
+    async def get_by_id(self, transaction_id: int) -> Transaction | None:
         """Busca transação por ID"""
         try:
             stmt = select(TransactionModel).where(TransactionModel.id == transaction_id)
@@ -101,13 +102,13 @@ class TransactionRepository(ITransactionRepository):
 
     def _build_filter_query(
         self,
-        tipo: Optional[str] = None,
-        categoria: Optional[str] = None,
-        local_id: Optional[int] = None,
-        painel_id: Optional[int] = None,
-        descricao: Optional[str] = None,
-        data_inicio: Optional[date] = None,
-        data_fim: Optional[date] = None
+        tipo: str | None = None,
+        categoria: str | None = None,
+        local_id: int | None = None,
+        painel_id: int | None = None,
+        descricao: str | None = None,
+        data_inicio: date | None = None,
+        data_fim: date | None = None
     ):
         """Constrói query base com filtros (reutilizável para list e count)"""
         conditions = []
@@ -133,14 +134,14 @@ class TransactionRepository(ITransactionRepository):
         self,
         limit: int = 10,
         offset: int = 0,
-        tipo: Optional[str] = None,
-        categoria: Optional[str] = None,
-        local_id: Optional[int] = None,
-        painel_id: Optional[int] = None,
-        descricao: Optional[str] = None,
-        data_inicio: Optional[date] = None,
-        data_fim: Optional[date] = None
-    ) -> List[Transaction]:
+        tipo: str | None = None,
+        categoria: str | None = None,
+        local_id: int | None = None,
+        painel_id: int | None = None,
+        descricao: str | None = None,
+        data_inicio: date | None = None,
+        data_fim: date | None = None
+    ) -> list[Transaction]:
         """Lista transações com filtros opcionais"""
         try:
             stmt = select(TransactionModel)
@@ -165,7 +166,7 @@ class TransactionRepository(ITransactionRepository):
         except Exception as e:
             raise DatabaseException(f"Erro ao listar transações: {str(e)}", e)
 
-    async def update(self, transaction_id: int, transaction: Transaction) -> Optional[Transaction]:
+    async def update(self, transaction_id: int, transaction: Transaction) -> Transaction | None:
         """Atualiza uma transação"""
         try:
             stmt = select(TransactionModel).where(TransactionModel.id == transaction_id)
@@ -176,27 +177,27 @@ class TransactionRepository(ITransactionRepository):
                 return None
 
             # Atualizar campos
-            model.data = transaction.data
-            model.descricao = transaction.descricao
-            model.valor = transaction.valor
-            model.tipo = transaction.tipo.value
-            model.categoria = transaction.categoria
-            model.recorrencia = transaction.recorrencia.value if transaction.recorrencia else None
-            model.parcelas = transaction.parcelas
-            model.tipo_divisao = transaction.tipo_divisao.value if transaction.tipo_divisao else "PESSOAL"
-            model.valor_por_pessoa = transaction.valor_por_pessoa
-            model.porcentagem_divisao = transaction.porcentagem_divisao
-            model.local_id = transaction.local_id
-            model.painel_id = transaction.painel_id
+            model.data = transaction.data  # type: ignore[assignment]
+            model.descricao = transaction.descricao  # type: ignore[assignment]
+            model.valor = transaction.valor  # type: ignore[assignment]
+            model.tipo = transaction.tipo.value  # type: ignore[assignment]
+            model.categoria = transaction.categoria  # type: ignore[assignment]
+            model.recorrencia = transaction.recorrencia.value if transaction.recorrencia else None  # type: ignore[assignment]
+            model.parcelas = transaction.parcelas  # type: ignore[assignment]
+            model.tipo_divisao = transaction.tipo_divisao.value if transaction.tipo_divisao else "PESSOAL"  # type: ignore[assignment]
+            model.valor_por_pessoa = transaction.valor_por_pessoa  # type: ignore[assignment]
+            model.porcentagem_divisao = transaction.porcentagem_divisao  # type: ignore[assignment]
+            model.local_id = transaction.local_id  # type: ignore[assignment]
+            model.painel_id = transaction.painel_id  # type: ignore[assignment]
             # Campos de parcelamento
-            model.parcela_numero = transaction.parcela_numero
-            model.transacao_mae_id = transaction.transacao_mae_id
-            model.eh_parcela = transaction.eh_parcela
+            model.parcela_numero = transaction.parcela_numero  # type: ignore[assignment]
+            model.transacao_mae_id = transaction.transacao_mae_id  # type: ignore[assignment]
+            model.eh_parcela = transaction.eh_parcela  # type: ignore[assignment]
             # Campos de recorrência
-            model.transacao_recorrente_origem_id = transaction.transacao_recorrente_origem_id
-            model.recorrencia_ativa = transaction.recorrencia_ativa
-            model.proxima_geracao = transaction.proxima_geracao
-            model.atualizado_em = datetime.now()  # Sem timezone para compatibilidade com TIMESTAMP WITHOUT TIME ZONE
+            model.transacao_recorrente_origem_id = transaction.transacao_recorrente_origem_id  # type: ignore[assignment]
+            model.recorrencia_ativa = transaction.recorrencia_ativa  # type: ignore[assignment]
+            model.proxima_geracao = transaction.proxima_geracao  # type: ignore[assignment]
+            model.atualizado_em = datetime.now()  # type: ignore[assignment]  # Sem timezone para compatibilidade com TIMESTAMP WITHOUT TIME ZONE
 
             await self.session.commit()
             await self.session.refresh(model)
@@ -225,13 +226,13 @@ class TransactionRepository(ITransactionRepository):
 
     async def count(
         self,
-        tipo: Optional[str] = None,
-        categoria: Optional[str] = None,
-        local_id: Optional[int] = None,
-        painel_id: Optional[int] = None,
-        descricao: Optional[str] = None,
-        data_inicio: Optional[date] = None,
-        data_fim: Optional[date] = None
+        tipo: str | None = None,
+        categoria: str | None = None,
+        local_id: int | None = None,
+        painel_id: int | None = None,
+        descricao: str | None = None,
+        data_inicio: date | None = None,
+        data_fim: date | None = None
     ) -> int:
         """Conta total de transações com filtros"""
         try:
@@ -249,7 +250,7 @@ class TransactionRepository(ITransactionRepository):
         except Exception as e:
             raise DatabaseException(f"Erro ao contar transações: {str(e)}", e)
 
-    async def get_installments(self, transaction_mae_id: int) -> List[Transaction]:
+    async def get_installments(self, transaction_mae_id: int) -> list[Transaction]:
         """Busca todas as parcelas de uma transação parcelada"""
         try:
             # Buscar a transação mãe e todas as suas filhas

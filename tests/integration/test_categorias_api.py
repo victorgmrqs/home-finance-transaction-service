@@ -3,7 +3,7 @@ Testes de integração para API de categorias
 """
 
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 from src.main import app
 
@@ -22,7 +22,7 @@ async def test_list_categorias():
         assert data["code"] == "SUCCESS"
         assert data["message"] == "Categorias listadas com sucesso"
         assert isinstance(data["data"], list)
-        
+
         # Em ambiente de teste, pode não haver categorias padrão
         # Vamos apenas verificar se a estrutura está correta
         if len(data["data"]) > 0:
@@ -291,11 +291,10 @@ async def test_update_categoria_duplicate_name():
         base_url="http://test"
     ) as client:
         # Criar duas categorias
-        cat1_response = await client.post("/api/v1/categorias", json={
+        await client.post("/api/v1/categorias", json={
             "nome": "Categoria 1",
             "descricao": "Primeira categoria"
         })
-        cat1_id = cat1_response.json()["data"]["id"]
 
         cat2_response = await client.post("/api/v1/categorias", json={
             "nome": "Categoria 2",

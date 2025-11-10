@@ -4,12 +4,25 @@ Aplicação principal do Home Finance Transaction Service
 
 import logging
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.core.config import settings
-from src.adapters.controllers.healthcheck_controller import router as healthcheck_router
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
+
+from src.adapters.controllers.auth_controller import router as auth_router
+from src.adapters.controllers.categoria_controller import router as categoria_router
 from src.adapters.controllers.exception_handlers import register_exception_handlers
+from src.adapters.controllers.healthcheck_controller import router as healthcheck_router
+from src.adapters.controllers.local_controller import router as local_router
+from src.adapters.controllers.painel_analytics_controller import router as painel_analytics_router
+from src.adapters.controllers.painel_controller import router as painel_router
+from src.adapters.controllers.painel_sharing_controller import router as painel_sharing_router
+from src.adapters.controllers.transaction_controller import router as transaction_router
+from src.adapters.controllers.usuario_controller import router as usuario_router
 from src.adapters.middlewares.auth_middleware import MockAuthMiddleware
+from src.core.config import settings
 
 # Configuração de logging
 logging.basicConfig(
@@ -26,7 +39,7 @@ async def lifespan(app: FastAPI):
     logger.info(f"Aplicando {settings.app_name} v{settings.app_version}")
     logger.info(f"Ambiente: {settings.environment}")
     logger.info(f"Debug: {settings.debug}")
-    
+
     # Startup
     logger.info("Inicialização da aplicação...")
     try:
@@ -38,9 +51,9 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Erro durante inicialização: {e}")
         raise
-    
+
     yield
-    
+
     # Shutdown
     logger.info("Finalização da aplicação...")
 
@@ -67,29 +80,15 @@ app.add_middleware(
 app.add_middleware(MockAuthMiddleware, environment=settings.environment)
 
 # Configurar rate limiting global
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
-
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
 # Registrar exception handlers
 register_exception_handlers(app)
 
 # Inclusão dos routers
 app.include_router(healthcheck_router, prefix="", tags=["Health"])
-
-# Importar e registrar routers de negócio
-from src.adapters.controllers.transaction_controller import router as transaction_router
-from src.adapters.controllers.local_controller import router as local_router
-from src.adapters.controllers.usuario_controller import router as usuario_router
-from src.adapters.controllers.painel_controller import router as painel_router
-from src.adapters.controllers.painel_sharing_controller import router as painel_sharing_router
-from src.adapters.controllers.painel_analytics_controller import router as painel_analytics_router
-from src.adapters.controllers.categoria_controller import router as categoria_router
-from src.adapters.controllers.auth_controller import router as auth_router
 
 # Auth routers (public, no version prefix)
 app.include_router(auth_router, prefix="/api/v1", tags=["Autenticação"])
@@ -108,7 +107,7 @@ app.include_router(categoria_router, prefix="/api/v1", tags=["Categorias"])
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(
         "main:app",
         host=settings.host,

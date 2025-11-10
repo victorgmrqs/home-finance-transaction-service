@@ -3,6 +3,7 @@ Testes unitários para validação de tipo_conta em Painéis
 """
 
 import pytest
+
 from src.domain.models.painel import Painel
 
 

@@ -2,10 +2,11 @@
 Módulo de segurança - Hash de senhas e JWT
 """
 
+from datetime import datetime, timedelta
+
 import bcrypt
 import jwt
-from datetime import datetime, timedelta
-from typing import Optional
+
 from src.core.config import settings
 
 
@@ -95,7 +96,7 @@ class JWTManager:
     @staticmethod
     def create_access_token(
         data: dict,
-        expires_delta: Optional[timedelta] = None
+        expires_delta: timedelta | None = None
     ) -> str:
         """
         Cria um token JWT de acesso
@@ -108,7 +109,7 @@ class JWTManager:
             Token JWT codificado
         """
         now = datetime.utcnow()
-        
+
         # Define expiração
         if expires_delta:
             expire = now + expires_delta
@@ -131,7 +132,7 @@ class JWTManager:
         )
 
     @staticmethod
-    def decode_access_token(token: str) -> Optional[dict]:
+    def decode_access_token(token: str) -> dict[str, object] | None:
         """
         Decodifica e valida um token JWT
 
@@ -142,11 +143,12 @@ class JWTManager:
             Dados decodificados do token ou None se inválido
         """
         try:
-            return jwt.decode(
+            decoded = jwt.decode(
                 token,
                 settings.secret_key,
                 algorithms=["HS256"]
             )
+            return dict(decoded)
         except jwt.ExpiredSignatureError:
             # Token expirado
             return None

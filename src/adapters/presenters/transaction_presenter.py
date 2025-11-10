@@ -3,7 +3,7 @@ Transaction Presenter
 Formatação de responses para endpoints de transações
 """
 
-from typing import List
+
 from src.domain.models.transaction import Transaction
 from src.shared.responses import success_response
 
@@ -32,8 +32,8 @@ def present_transaction(transaction: Transaction) -> dict:
         "porcentagem_divisao": transaction.porcentagem_divisao,
         "local_id": transaction.local_id,
         "painel_id": transaction.painel_id,
-        "criado_em": transaction.criado_em.isoformat(),
-        "atualizado_em": transaction.atualizado_em.isoformat()
+        "criado_em": transaction.criado_em.isoformat() if transaction.criado_em else None,
+        "atualizado_em": transaction.atualizado_em.isoformat() if transaction.atualizado_em else None
     }
 
 
@@ -56,7 +56,7 @@ def present_transaction_detail(transaction: Transaction) -> dict:
 
 
 def present_transaction_list(
-    transactions: List[Transaction],
+    transactions: list[Transaction],
     total: int,
     limit: int,
     offset: int

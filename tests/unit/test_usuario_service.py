@@ -3,12 +3,16 @@ Testes de Serviço: UsuarioService
 Testa a lógica de negócio da camada de aplicação para usuários
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime
+from unittest.mock import AsyncMock
+
+import pytest
+
 from src.application.usuario_service import UsuarioService
+from src.domain.exceptions import (
+    DatabaseException,
+)
 from src.domain.models.usuario import Usuario
-from src.domain.exceptions import UsuarioNotFoundException, InvalidUsuarioException, DatabaseException
 
 
 class TestUsuarioService:

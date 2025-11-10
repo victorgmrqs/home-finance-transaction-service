@@ -3,27 +3,27 @@ Controller de Autenticação
 Gerencia endpoints de login e registro de usuários
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.schemas_api import (
-    RegisterRequest,
-    LoginRequest,
-    AuthResponse,
-    AuthDataResponse,
-    AuthUserResponse,
-    BaseResponse
-)
-from src.application.auth_service import AuthService
 from src.adapters.repositories.usuario_repository import UsuarioRepository
+from src.application.auth_service import AuthService
+from src.core.schemas_api import (
+    AuthDataResponse,
+    AuthResponse,
+    AuthUserResponse,
+    BaseResponse,
+    LoginRequest,
+    RegisterRequest,
+)
 from src.db.session import get_session
 from src.domain.exceptions import (
     BusinessRuleViolationError,
     DuplicateEntityError,
-    EntityNotFoundError
 )
+from src.ports.usuario_port import UsuarioRepositoryPort
 
 router = APIRouter()
 
@@ -33,7 +33,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 def get_auth_service(session: AsyncSession = Depends(get_session)) -> AuthService:
     """Dependency para obter instância do AuthService"""
-    usuario_repository = UsuarioRepository(session)
+    usuario_repository: UsuarioRepositoryPort = UsuarioRepository(session)  # type: ignore[assignment]
     return AuthService(usuario_repository)
 
 
@@ -69,6 +69,10 @@ async def register(
             password=register_data.password
         )
 
+        if usuario.id is None:
+            raise ValueError("Usuário criado deve ter ID")
+        if usuario.email is None:
+            raise ValueError("Usuário criado deve ter email")
         return AuthResponse(
             code="REGISTER_SUCCESS",
             message="Usuário registrado com sucesso",
@@ -142,6 +146,10 @@ async def login(
             password=login_data.password
         )
 
+        if usuario.id is None:
+            raise ValueError("Usuário autenticado deve ter ID")
+        if usuario.email is None:
+            raise ValueError("Usuário autenticado deve ter email")
         return AuthResponse(
             code="LOGIN_SUCCESS",
             message="Login realizado com sucesso",

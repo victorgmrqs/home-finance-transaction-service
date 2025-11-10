@@ -5,7 +5,6 @@ Representa um usuário do sistema que pode possuir múltiplos painéis de contro
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 
 @dataclass
@@ -16,12 +15,12 @@ class Usuario:
     Representa uma pessoa que utiliza o sistema, podendo possuir múltiplos painéis
     de controle financeiro para organizar suas transações por contexto.
     """
-    id: Optional[int]
+    id: int | None
     nome: str
-    email: Optional[str] = None
-    password_hash: Optional[str] = None
-    criado_em: Optional[datetime] = None
-    atualizado_em: Optional[datetime] = None
+    email: str | None = None
+    password_hash: str | None = None
+    criado_em: datetime | None = None
+    atualizado_em: datetime | None = None
 
     def __post_init__(self):
         """Valida o usuário após inicialização"""

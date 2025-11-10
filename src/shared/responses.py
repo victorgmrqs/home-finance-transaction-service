@@ -3,13 +3,13 @@ Respostas padronizadas da aplicação
 Segue o padrão definido no contrato da API (transaction-service-contract.yaml)
 """
 
-from typing import Any, Optional
+from typing import Any
 
 
 def success_response(
     code: str,
     message: str,
-    data: Optional[Any] = None
+    data: Any | None = None
 ) -> dict:
     """
     Resposta de sucesso padronizada
@@ -31,7 +31,7 @@ def success_response(
 def error_response(
     code: str,
     message: str,
-    data: Optional[Any] = None
+    data: Any | None = None
 ) -> dict:
     """
     Resposta de erro padronizada

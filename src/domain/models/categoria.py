@@ -5,7 +5,6 @@ Representa uma categoria de transação que pode ser padrão do sistema ou custo
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 
 @dataclass
@@ -17,13 +16,13 @@ class Categoria:
     - Padrão do sistema (is_default=True, usuario_id=None)
     - Customizada por usuário (is_default=False, usuario_id=X)
     """
-    id: Optional[int]
+    id: int | None
     nome: str
-    descricao: Optional[str] = None
-    usuario_id: Optional[int] = None
+    descricao: str | None = None
+    usuario_id: int | None = None
     is_default: bool = False
-    criado_em: Optional[datetime] = None
-    atualizado_em: Optional[datetime] = None
+    criado_em: datetime | None = None
+    atualizado_em: datetime | None = None
 
     def __post_init__(self):
         """Valida a categoria após inicialização"""
@@ -60,7 +59,7 @@ class Categoria:
         """Verifica se a categoria pertence ao usuário especificado"""
         if self.is_categoria_padrao():
             return True  # Categorias padrão estão disponíveis para todos
-        
+
         return self.usuario_id == usuario_id
 
     def pode_ser_editada_por(self, usuario_id: int) -> bool:
