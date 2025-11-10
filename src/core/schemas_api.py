@@ -520,3 +520,103 @@ class SessionRecoveryResponse(BaseResponse):
                 }
             }
         }
+
+
+# ===== DASHBOARD AGGREGATION SCHEMAS =====
+
+class DashboardResumo(BaseModel):
+    """Resumo geral do dashboard"""
+    total_receitas: float = Field(..., description="Total de receitas")
+    total_despesas: float = Field(..., description="Total de despesas")
+    saldo: float = Field(..., description="Saldo (receitas - despesas)")
+    total_transacoes: int = Field(..., description="Total de transações")
+
+
+class DashboardCategoria(BaseModel):
+    """Agregação por categoria"""
+    categoria: str = Field(..., description="Nome da categoria")
+    total: float = Field(..., description="Total gasto/recebido")
+    quantidade: int = Field(..., description="Quantidade de transações")
+    percentual: float = Field(..., description="Percentual do total (%)")
+
+
+class DashboardPainel(BaseModel):
+    """Agregação por painel"""
+    painel_id: int = Field(..., description="ID do painel")
+    painel_nome: str = Field(..., description="Nome do painel")
+    tipo_conta: str = Field(..., description="Tipo de conta")
+    total_receitas: float = Field(..., description="Total de receitas")
+    total_despesas: float = Field(..., description="Total de despesas")
+    saldo: float = Field(..., description="Saldo do painel")
+    quantidade_transacoes: int = Field(..., description="Quantidade de transações")
+
+
+class DashboardEstatisticas(BaseModel):
+    """Estatísticas do dashboard"""
+    media_diaria: float = Field(..., description="Média de gastos por dia")
+    transacao_min: float = Field(..., description="Menor transação do período (receitas + despesas)")
+    transacao_max: float = Field(..., description="Maior transação do período (receitas + despesas)")
+    maior_despesa: float = Field(..., description="Maior despesa do período")
+    menor_despesa: float = Field(..., description="Menor despesa do período")
+    maior_receita: float = Field(..., description="Maior receita do período")
+    menor_receita: float = Field(..., description="Menor receita do período")
+
+
+class DashboardSummaryData(BaseModel):
+    """Dados completos do dashboard summary"""
+    mes: str = Field(..., description="Mês do relatório (YYYY-MM)")
+    usuario_id: int = Field(..., description="ID do usuário")
+    resumo: DashboardResumo = Field(..., description="Resumo geral")
+    por_categoria: list[DashboardCategoria] = Field(..., description="Agregação por categoria")
+    por_painel: list[DashboardPainel] = Field(..., description="Agregação por painel")
+    estatisticas: DashboardEstatisticas = Field(..., description="Estatísticas gerais")
+
+
+class DashboardSummaryResponse(BaseResponse):
+    """Schema de resposta para dashboard summary"""
+    data: DashboardSummaryData = Field(..., description="Dados do dashboard")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "code": "DASHBOARD_SUMMARY_SUCCESS",
+                "message": "Dashboard summary calculado com sucesso",
+                "data": {
+                    "mes": "2025-11",
+                    "usuario_id": 1,
+                    "resumo": {
+                        "total_receitas": 5000.00,
+                        "total_despesas": 3000.00,
+                        "saldo": 2000.00,
+                        "total_transacoes": 45
+                    },
+                    "por_categoria": [
+                        {
+                            "categoria": "Alimentação",
+                            "total": 1500.00,
+                            "quantidade": 20,
+                            "percentual": 50.0
+                        }
+                    ],
+                    "por_painel": [
+                        {
+                            "painel_id": 1,
+                            "painel_nome": "Painel 1",
+                            "tipo_conta": "CARTAO_CREDITO",
+                            "total_receitas": 2000.00,
+                            "total_despesas": 1000.00,
+                            "saldo": 1000.00,
+                            "quantidade_transacoes": 15
+                        }
+                    ],
+                    "estatisticas": {
+                        "media_diaria": 100.00,
+                        "maior_despesa": 500.00,
+                        "menor_despesa": 10.00,
+                        "maior_receita": 3000.00,
+                        "menor_receita": 100.00
+                    }
+                }
+            }
+        }
+
