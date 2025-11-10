@@ -2,9 +2,9 @@
 Testes de integração para API de autenticação
 """
 
+
 import pytest
 from httpx import ASGITransport, AsyncClient
-from unittest.mock import MagicMock, patch
 
 from src.core.config import settings
 from src.main import app
@@ -13,13 +13,13 @@ from src.main import app
 def clear_rate_limiter_storage():
     """Função auxiliar para limpar o storage do rate limiter"""
     from src.adapters.controllers import auth_controller
-    
+
     limiters = []
     if hasattr(app.state, "limiter"):
         limiters.append(app.state.limiter)
     if hasattr(auth_controller, 'limiter'):
         limiters.append(auth_controller.limiter)
-    
+
     for limiter_obj in limiters:
         if hasattr(limiter_obj, "_storage"):
             try:
@@ -40,33 +40,33 @@ def disable_rate_limiting(monkeypatch):
     """Desabilita rate limiting para todos os testes de autenticação"""
     # Limpar o storage antes de cada teste
     clear_rate_limiter_storage()
-    
+
     # Mockar get_remote_address para retornar valores únicos por teste
-    import time
     import random
-    
+    import time
+
     # Usar um contador único por teste para garantir chaves diferentes
     test_counter = [0]  # Usar lista para permitir modificação em closure
-    
+
     def unique_key_func(request):
         """Retorna uma chave única para cada chamada, evitando rate limiting"""
         test_counter[0] += 1
         return f"test_{id(request)}_{time.time()}_{random.random()}_{test_counter[0]}"
-    
+
     # Substituir a função key_func do limiter
     monkeypatch.setattr("slowapi.util.get_remote_address", unique_key_func)
-    
+
     # Também substituir no limiter do app
     if hasattr(app.state, "limiter"):
         app.state.limiter.key_func = unique_key_func
-    
+
     # E no limiter do auth_controller
     from src.adapters.controllers import auth_controller
     if hasattr(auth_controller, 'limiter'):
         auth_controller.limiter.key_func = unique_key_func
-    
+
     yield
-    
+
     # Limpar novamente após o teste
     clear_rate_limiter_storage()
 
@@ -306,7 +306,7 @@ async def test_register_duplicate_email():
     """Testa registro com email duplicado"""
     # Limpar storage do rate limiter antes do teste
     clear_rate_limiter_storage()
-    
+
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test"
@@ -361,7 +361,7 @@ async def test_cookie_attributes():
     """Testa que os atributos do cookie estão corretos"""
     # Limpar storage do rate limiter antes do teste
     clear_rate_limiter_storage()
-    
+
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test"
