@@ -101,9 +101,9 @@ class Settings(BaseSettings):
     @classmethod
     def validate_cookie_samesite(cls, v):
         """Valida se o valor de SameSite está dentro dos valores permitidos"""
-        allowed_values = ["lax", "strict", "none"]
         if isinstance(v, str):
             v_lower = v.lower()
+            allowed_values = ["lax", "strict", "none"]
             if v_lower not in allowed_values:
                 raise ValueError(f"cookie_samesite deve ser um dos: {allowed_values}")
             return v_lower

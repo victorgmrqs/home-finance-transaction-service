@@ -228,10 +228,13 @@ async def logout(response: Response):
     **Retorna:**
     - Mensagem de sucesso
     """
-    # Limpar cookie definindo max_age=0
+    # Limpar cookie com todos os parâmetros para garantir deleção em todos os navegadores
     response.delete_cookie(
         key=settings.cookie_name,
-        path="/"
+        path="/",
+        samesite=settings.cookie_samesite,
+        secure=settings.cookie_secure,
+        httponly=settings.cookie_httponly
     )
 
     return BaseResponse(

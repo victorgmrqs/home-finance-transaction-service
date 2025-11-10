@@ -3,6 +3,7 @@ Usuario Controller
 Endpoints HTTP para gerenciamento de usuários
 """
 
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.exc import IntegrityError
@@ -31,6 +32,7 @@ from src.domain.exceptions import DatabaseException
 from src.domain.models.usuario import Usuario
 
 router = APIRouter(tags=["Usuários"])
+logger = logging.getLogger(__name__)
 
 
 @router.post("/usuarios", status_code=status.HTTP_201_CREATED, response_model=UsuarioCreateResponse)
@@ -59,6 +61,9 @@ async def create_usuario(
 
         return present_usuario_created(created)
     except DatabaseException as e:
+        # Log da exceção para rastreabilidade
+        logger.error(f"Erro de banco de dados ao criar usuário: {e}", exc_info=True)
+        
         # Verificar se é erro de email duplicado
         error_msg = str(e).lower()
         if "unique" in error_msg and "email" in error_msg:
@@ -71,6 +76,9 @@ async def create_usuario(
             detail=str(e)
         ) from e
     except IntegrityError as e:
+        # Log da exceção para rastreabilidade
+        logger.error(f"Erro de integridade ao criar usuário: {e}", exc_info=True)
+        
         # Verificar se é erro de email duplicado
         error_msg = str(e.orig).lower()
         if "unique" in error_msg and "email" in error_msg:
@@ -111,6 +119,8 @@ async def list_usuarios(
 
         return present_usuario_list(usuarios, total)
     except DatabaseException as e:
+        # Log da exceção para rastreabilidade
+        logger.error(f"Erro de banco de dados ao listar usuários: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erro ao acessar o banco de dados"
@@ -157,6 +167,8 @@ async def get_usuario_by_email(
 
         return present_usuario_detail(usuario)
     except DatabaseException as e:
+        # Log da exceção para rastreabilidade
+        logger.error(f"Erro de banco de dados ao buscar usuário por email: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erro ao acessar o banco de dados"

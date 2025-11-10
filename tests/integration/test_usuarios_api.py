@@ -94,6 +94,19 @@ async def test_get_usuario():
         assert "data" in create_data, f"Resposta não contém 'data': {create_data}"
         created_id = create_data["data"]["id"]
 
+        # Teste de registro duplicado de email
+        duplicate_response = await client.post("/api/v1/usuarios", json={
+            "nome": "Outro Usuário",
+            "email": "teste@example.com"
+        })
+        assert duplicate_response.status_code == 409, f"Esperado status 409 para email duplicado, recebido: {duplicate_response.status_code}"
+        duplicate_data = duplicate_response.json()
+        assert duplicate_data is not None, "Resposta não contém JSON válido"
+        assert "detail" in duplicate_data, f"Resposta não contém mensagem de erro: {duplicate_data}"
+        # Verifica se a mensagem contém informação sobre email duplicado
+        error_message = duplicate_data.get("detail", "")
+        assert "email" in error_message.lower() and ("cadastrado" in error_message.lower() or "duplicado" in error_message.lower()), f"Mensagem de erro inesperada: {error_message}"
+
         # Buscar
         response = await client.get(f"/api/v1/usuarios/{created_id}")
 
