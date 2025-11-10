@@ -40,6 +40,10 @@ class MockAuthMiddleware(BaseHTTPMiddleware):
         if request.url.path in self.public_routes:
             return await call_next(request)
 
+        # Permitir rotas de autenticação sem middleware
+        if request.url.path.startswith("/api/v1/auth"):
+            return await call_next(request)
+
         # Em desenvolvimento, usar mock de autenticação
         if self.environment == "development":
             user_id = self._get_mock_user_id(request)

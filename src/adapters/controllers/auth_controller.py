@@ -3,16 +3,17 @@ Controller de Autenticação
 Gerencia endpoints de login e registro de usuários
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.adapters.repositories.usuario_repository import UsuarioRepository
 from src.application.auth_service import AuthService
+from src.core.config import settings
 from src.core.schemas_api import (
-    AuthDataResponse,
-    AuthResponse,
+    AuthDataResponseCookie,
+    AuthResponseCookie,
     AuthUserResponse,
     BaseResponse,
     LoginRequest,
@@ -39,13 +40,14 @@ def get_auth_service(session: AsyncSession = Depends(get_session)) -> AuthServic
 
 @router.post(
     "/auth/register",
-    response_model=AuthResponse,
+    response_model=AuthResponseCookie,
     status_code=status.HTTP_201_CREATED,
     summary="Registrar novo usuário",
-    description="Cria uma nova conta de usuário com email e senha"
+    description="Cria uma nova conta de usuário com email e senha. Token JWT é retornado via HttpOnly cookie."
 )
 @limiter.limit("5/minute")
 async def register(
+    response: Response,
     request: Request,
     register_data: RegisterRequest,
     auth_service: AuthService = Depends(get_auth_service)
@@ -58,9 +60,12 @@ async def register(
     - Senha com força mínima (8 caracteres, maiúscula, minúscula, dígito)
     - Email válido
 
+    **Segurança:**
+    - Token retornado via HttpOnly cookie (proteção contra XSS)
+
     **Retorna:**
     - Dados do usuário criado
-    - Token JWT para autenticação
+    - Token JWT via Set-Cookie header (HttpOnly, Secure em prod, SameSite)
     """
     try:
         usuario, token = await auth_service.register(
@@ -73,16 +78,27 @@ async def register(
             raise ValueError("Usuário criado deve ter ID")
         if usuario.email is None:
             raise ValueError("Usuário criado deve ter email")
-        return AuthResponse(
+
+        # Configurar cookie com o token JWT
+        response.set_cookie(
+            key=settings.cookie_name,
+            value=token,
+            httponly=settings.cookie_httponly,
+            secure=settings.cookie_secure,
+            samesite=settings.cookie_samesite,
+            max_age=settings.cookie_max_age,
+            path="/"
+        )
+
+        return AuthResponseCookie(
             code="REGISTER_SUCCESS",
             message="Usuário registrado com sucesso",
-            data=AuthDataResponse(
+            data=AuthDataResponseCookie(
                 user=AuthUserResponse(
                     id=usuario.id,
                     nome=usuario.nome,
                     email=usuario.email
-                ),
-                token=token
+                )
             )
         )
 
@@ -114,13 +130,14 @@ async def register(
 
 @router.post(
     "/auth/login",
-    response_model=AuthResponse,
+    response_model=AuthResponseCookie,
     status_code=status.HTTP_200_OK,
     summary="Fazer login",
-    description="Autentica usuário com email e senha"
+    description="Autentica usuário com email e senha. Token JWT é retornado via HttpOnly cookie."
 )
 @limiter.limit("5/minute")
 async def login(
+    response: Response,
     request: Request,
     login_data: LoginRequest,
     auth_service: AuthService = Depends(get_auth_service)
@@ -135,10 +152,11 @@ async def login(
     **Segurança:**
     - Rate limiting: máximo 5 tentativas por minuto por IP
     - Mensagem genérica para credenciais inválidas (não expõe se email existe)
+    - Token retornado via HttpOnly cookie (proteção contra XSS)
 
     **Retorna:**
     - Dados do usuário
-    - Token JWT para autenticação
+    - Token JWT via Set-Cookie header (HttpOnly, Secure em prod, SameSite)
     """
     try:
         usuario, token = await auth_service.login(
@@ -150,16 +168,27 @@ async def login(
             raise ValueError("Usuário autenticado deve ter ID")
         if usuario.email is None:
             raise ValueError("Usuário autenticado deve ter email")
-        return AuthResponse(
+
+        # Configurar cookie com o token JWT
+        response.set_cookie(
+            key=settings.cookie_name,
+            value=token,
+            httponly=settings.cookie_httponly,
+            secure=settings.cookie_secure,
+            samesite=settings.cookie_samesite,
+            max_age=settings.cookie_max_age,
+            path="/"
+        )
+
+        return AuthResponseCookie(
             code="LOGIN_SUCCESS",
             message="Login realizado com sucesso",
-            data=AuthDataResponse(
+            data=AuthDataResponseCookie(
                 user=AuthUserResponse(
                     id=usuario.id,
                     nome=usuario.nome,
                     email=usuario.email
-                ),
-                token=token
+                )
             )
         )
 
@@ -182,11 +211,41 @@ async def login(
         ) from e
 
 
+@router.post(
+    "/auth/logout",
+    response_model=BaseResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Fazer logout",
+    description="Remove o cookie de autenticação"
+)
+async def logout(response: Response):
+    """
+    Remove o cookie de autenticação do usuário
+
+    **Ação:**
+    - Limpa o cookie HttpOnly definindo max_age=0
+
+    **Retorna:**
+    - Mensagem de sucesso
+    """
+    # Limpar cookie definindo max_age=0
+    response.delete_cookie(
+        key=settings.cookie_name,
+        path="/"
+    )
+
+    return BaseResponse(
+        code="LOGOUT_SUCCESS",
+        message="Logout realizado com sucesso",
+        data=None
+    )
+
+
 @router.get(
     "/auth/verify",
     response_model=BaseResponse,
     summary="Verificar token JWT",
-    description="Verifica se um token JWT é válido"
+    description="Verifica se um token JWT é válido (via cookie ou header Authorization)"
 )
 async def verify_token(
     request: Request,
@@ -195,16 +254,24 @@ async def verify_token(
     """
     Verifica validade do token JWT
 
-    **Headers esperados:**
-    - Authorization: Bearer {token}
+    **Token pode vir de:**
+    - Cookie HttpOnly (preferência)
+    - Header Authorization: Bearer {token} (fallback)
 
     **Retorna:**
     - Dados do usuário se token válido
     - Erro 401 se token inválido/expirado
     """
-    auth_header = request.headers.get("Authorization")
+    # Tentar ler do cookie primeiro
+    token = request.cookies.get(settings.cookie_name)
 
-    if not auth_header or not auth_header.startswith("Bearer "):
+    # Fallback para header Authorization
+    if not token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.replace("Bearer ", "")
+
+    if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={
@@ -212,8 +279,6 @@ async def verify_token(
                 "message": "Token de autenticação não fornecido"
             }
         )
-
-    token = auth_header.replace("Bearer ", "")
 
     usuario = await auth_service.get_current_user(token)
 
