@@ -145,6 +145,7 @@ async def test_get_session_info_with_missing_exp_field(auth_service, mock_reposi
 
     # Criar token sem campo 'exp'
     import jwt as pyjwt
+
     from src.core.config import settings
 
     payload = {
@@ -180,8 +181,10 @@ async def test_get_session_info_with_missing_iat_field(auth_service, mock_reposi
     mock_repository.get_by_id.return_value = usuario
 
     # Criar token sem campo 'iat'
-    import jwt as pyjwt
     from datetime import timedelta
+
+    import jwt as pyjwt
+
     from src.core.config import settings
 
     now = datetime.now(UTC)
@@ -219,6 +222,7 @@ async def test_get_session_info_with_malformed_exp_field(auth_service, mock_repo
 
     # Criar token com 'exp' malformado (string ao invés de número)
     import jwt as pyjwt
+
     from src.core.config import settings
 
     payload = {
@@ -255,8 +259,10 @@ async def test_get_session_info_with_malformed_iat_field(auth_service, mock_repo
     mock_repository.get_by_id.return_value = usuario
 
     # Criar token com 'iat' malformado (string ao invés de número)
-    import jwt as pyjwt
     from datetime import timedelta
+
+    import jwt as pyjwt
+
     from src.core.config import settings
 
     now = datetime.now(UTC)

@@ -207,8 +207,10 @@ async def test_auth_me_response_structure():
 @pytest.mark.asyncio
 async def test_auth_me_with_expired_token():
     """Testa GET /auth/me com token expirado"""
+    from datetime import UTC, datetime, timedelta
+
     import jwt
-    from datetime import datetime, timedelta, UTC
+
     from src.core.config import settings
 
     # Gerar um token JWT expirado
@@ -231,10 +233,10 @@ async def test_auth_me_with_expired_token():
     ) as client:
         cookies = {settings.cookie_name: expired_token}
         response = await client.get("/api/v1/auth/me", cookies=cookies)
-        
+
         assert response.status_code == 401
         data = response.json()
-        
+
         # Verifica que a mensagem indica token inválido/expirado
         if "detail" in data:
             assert data["detail"]["code"] == "INVALID_SESSION"

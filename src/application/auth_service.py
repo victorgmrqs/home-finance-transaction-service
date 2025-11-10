@@ -141,7 +141,20 @@ class AuthService:
         Returns:
             Payload do token ou None se inválido
         """
-        return self.jwt_manager.decode_access_token(token)
+        payload = self.jwt_manager.decode_access_token(token)
+        if not payload:
+            return None
+
+        # Validação manual de expiração (já que desabilitamos verify_exp no decode)
+        from datetime import datetime
+        exp_timestamp = payload.get("exp")
+        if exp_timestamp and isinstance(exp_timestamp, (int, float)):
+            exp_datetime = datetime.fromtimestamp(float(exp_timestamp), tz=UTC)
+            if exp_datetime < datetime.now(UTC):
+                # Token expirado
+                return None
+
+        return payload
 
     async def get_current_user(self, token: str) -> Usuario | None:
         """
@@ -156,6 +169,15 @@ class AuthService:
         payload = self.jwt_manager.decode_access_token(token)
         if not payload:
             return None
+
+        # Validação manual de expiração (já que desabilitamos verify_exp no decode)
+        from datetime import datetime
+        exp_timestamp = payload.get("exp")
+        if exp_timestamp and isinstance(exp_timestamp, (int, float)):
+            exp_datetime = datetime.fromtimestamp(float(exp_timestamp), tz=UTC)
+            if exp_datetime < datetime.now(UTC):
+                # Token expirado
+                return None
 
         user_id = payload.get("sub")
         if not user_id:
@@ -211,6 +233,13 @@ class AuthService:
         from datetime import datetime
         exp_timestamp = payload.get("exp")
         iat_timestamp = payload.get("iat")
+
+        # Validação manual de expiração (já que desabilitamos verify_exp no decode)
+        if exp_timestamp and isinstance(exp_timestamp, (int, float)):
+            exp_datetime = datetime.fromtimestamp(float(exp_timestamp), tz=UTC)
+            if exp_datetime < datetime.now(UTC):
+                # Token expirado
+                return None
 
         expires_at = None
         issued_at = None
