@@ -74,7 +74,7 @@ async def get_dashboard_summary(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Cabeçalho X-User-ID não fornecido. Autenticação obrigatória."
         )
-    
+
     try:
         usuario_id = int(usuario_id_header)
     except ValueError:
