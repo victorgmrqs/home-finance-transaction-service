@@ -23,7 +23,7 @@ async def test_get_dashboard_summary_success(test_db_session):
     async def override_get_session():
         yield test_db_session
     app.dependency_overrides[get_session] = override_get_session
-    
+
     # Arrange: Criar dados de teste
     usuario = UsuarioModel(
         id=100,
@@ -126,7 +126,7 @@ async def test_get_dashboard_summary_success(test_db_session):
     assert estatisticas["transacao_min"] == 50.00
     assert estatisticas["transacao_max"] == 5000.00
     assert estatisticas["media_diaria"] > 0
-    
+
     # Limpar override
     app.dependency_overrides.pop(get_session, None)
 
@@ -138,7 +138,7 @@ async def test_get_dashboard_summary_with_date_filters(test_db_session):
     async def override_get_session():
         yield test_db_session
     app.dependency_overrides[get_session] = override_get_session
-    
+
     # Arrange
     usuario = UsuarioModel(
         id=101,
@@ -205,7 +205,7 @@ async def test_get_dashboard_summary_with_date_filters(test_db_session):
     # Deve conter apenas a transação de novembro
     assert resumo["total_receitas"] == 500.00
     assert resumo["total_transacoes"] == 1
-    
+
     # Limpar override
     app.dependency_overrides.pop(get_session, None)
 
@@ -217,7 +217,7 @@ async def test_get_dashboard_summary_with_painel_filter(test_db_session):
     async def override_get_session():
         yield test_db_session
     app.dependency_overrides[get_session] = override_get_session
-    
+
     # Arrange
     usuario = UsuarioModel(
         id=102,
@@ -295,7 +295,7 @@ async def test_get_dashboard_summary_with_painel_filter(test_db_session):
     paineis = data["data"]["por_painel"]
     assert len(paineis) == 1
     assert paineis[0]["painel_nome"] == "Painel 1"
-    
+
     # Limpar override
     app.dependency_overrides.pop(get_session, None)
 
@@ -307,7 +307,7 @@ async def test_get_dashboard_summary_empty_results(test_db_session):
     async def override_get_session():
         yield test_db_session
     app.dependency_overrides[get_session] = override_get_session
-    
+
     # Arrange: Criar apenas usuário sem painéis/transações
     usuario = UsuarioModel(
         id=103,
@@ -340,7 +340,7 @@ async def test_get_dashboard_summary_empty_results(test_db_session):
 
     assert len(data["data"]["por_categoria"]) == 0
     assert len(data["data"]["por_painel"]) == 0
-    
+
     # Limpar override
     app.dependency_overrides.pop(get_session, None)
 
@@ -352,7 +352,7 @@ async def test_get_dashboard_summary_rate_limiting(test_db_session):
     async def override_get_session():
         yield test_db_session
     app.dependency_overrides[get_session] = override_get_session
-    
+
     # Arrange: Criar usuário
     usuario = UsuarioModel(
         id=104,
@@ -379,6 +379,6 @@ async def test_get_dashboard_summary_rate_limiting(test_db_session):
     # Assert: Todas devem ter sucesso (abaixo do limite)
     for response in responses:
         assert response.status_code == 200
-    
+
     # Limpar override
     app.dependency_overrides.pop(get_session, None)
