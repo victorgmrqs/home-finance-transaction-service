@@ -6,7 +6,7 @@ Endpoints para agregação de dados do dashboard
 from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
@@ -67,13 +67,33 @@ async def get_dashboard_summary(
 
     Consolida dados de múltiplos painéis e transações em uma única resposta.
     """
-    # Obter usuario_id do header (mock auth middleware)
-    usuario_id = int(request.headers.get("X-User-ID", "1"))
+    # Obter usuario_id do header (auth middleware obrigatório)
+    usuario_id_header = request.headers.get("X-User-ID")
+    if not usuario_id_header:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Cabeçalho X-User-ID não fornecido. Autenticação obrigatória."
+        )
+    
+    try:
+        usuario_id = int(usuario_id_header)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="O cabeçalho X-User-ID deve conter um ID de usuário válido."
+        )
 
-    # Parse painel_ids se fornecido
+    # Parse painel_ids se fornecido, com validação
     painel_ids_list = None
     if painel_ids:
-        painel_ids_list = [int(pid.strip()) for pid in painel_ids.split(",")]
+        painel_ids_raw = [pid.strip() for pid in painel_ids.split(",") if pid.strip()]
+        try:
+            painel_ids_list = [int(pid) for pid in painel_ids_raw]
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Os painel_ids fornecidos são inválidos. Certifique-se de que todos os IDs sejam inteiros separados por vírgula."
+            )
 
     # Buscar dados agregados
     result = await dashboard_service.get_dashboard_summary(

@@ -3,6 +3,7 @@ Dashboard Repository
 Implementação do repositório de dashboard com queries de agregação
 """
 
+import logging
 from datetime import date
 
 from sqlalchemy import and_, func, select
@@ -10,6 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.adapters.repositories.models import PainelModel, TransactionModel
 from src.domain.exceptions import DatabaseException
+
+logger = logging.getLogger(__name__)
 
 
 class DashboardRepository:
@@ -95,7 +98,7 @@ class DashboardRepository:
             }
 
         except Exception as e:
-            raise DatabaseException(f"Erro ao buscar resumo geral: {str(e)}", e)
+            raise DatabaseException(f"Erro ao buscar resumo geral: {str(e)}", e) from e
 
     async def get_agregacao_por_categoria(
         self,
@@ -166,7 +169,9 @@ class DashboardRepository:
             return categorias
 
         except Exception as e:
-            raise DatabaseException(f"Erro ao buscar agregação por categoria: {str(e)}", e)
+            raise DatabaseException(
+                f"Erro ao buscar agregação por categoria: {str(e)}", e
+            ) from e
 
     async def get_agregacao_por_painel(
         self,
@@ -244,6 +249,11 @@ class DashboardRepository:
                     paineis_dict[painel_id]["total_receitas"] = float(row.total or 0)
                 elif row.tipo == "SAIDA":
                     paineis_dict[painel_id]["total_despesas"] = float(row.total or 0)
+                elif row.tipo is not None:
+                    logger.warning(
+                        f"Transação com tipo desconhecido '{row.tipo}' encontrada "
+                        f"para painel_id={painel_id}. Valor ignorado."
+                    )
 
             # Buscar tipo_conta e quantidade de transações para cada painel
             if paineis_dict:
@@ -288,7 +298,9 @@ class DashboardRepository:
             return paineis_list
 
         except Exception as e:
-            raise DatabaseException(f"Erro ao buscar agregação por painel: {str(e)}", e)
+            raise DatabaseException(
+                f"Erro ao buscar agregação por painel: {str(e)}", e
+            ) from e
 
     async def get_estatisticas(
         self,
@@ -397,4 +409,4 @@ class DashboardRepository:
             }
 
         except Exception as e:
-            raise DatabaseException(f"Erro ao buscar estatísticas: {str(e)}", e)
+            raise DatabaseException(f"Erro ao buscar estatísticas: {str(e)}", e) from e
