@@ -13,6 +13,7 @@ from slowapi.util import get_remote_address
 
 from src.adapters.controllers.auth_controller import router as auth_router
 from src.adapters.controllers.categoria_controller import router as categoria_router
+from src.adapters.controllers.dashboard_controller import router as dashboard_router
 from src.adapters.controllers.exception_handlers import register_exception_handlers
 from src.adapters.controllers.healthcheck_controller import router as healthcheck_router
 from src.adapters.controllers.local_controller import router as local_router
@@ -102,6 +103,7 @@ app.include_router(painel_router, prefix="/api/v1", tags=["Painéis"])
 app.include_router(painel_sharing_router, prefix="/api/v1", tags=["Painéis - Compartilhamento"])
 app.include_router(painel_analytics_router, prefix="/api/v1", tags=["Painéis - Analytics"])
 app.include_router(categoria_router, prefix="/api/v1", tags=["Categorias"])
+app.include_router(dashboard_router, prefix="/api/v1", tags=["Dashboard"])
 
 
 
